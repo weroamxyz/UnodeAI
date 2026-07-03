@@ -76,9 +76,9 @@ describe('ClaudeHeadlessBackend team bridge MCP wiring', () => {
 
     expect(local.starts).toBe(1);
     expect(spawn.calls[0].args).toContain('--mcp-config');
-    expect(spawn.calls[0].args).toContain('.roam/mcp.json');
+    expect(spawn.calls[0].args).toContain('.unode/mcp.json');
 
-    const written = JSON.parse(await fs.readFile(path.join(dir, '.roam', 'mcp.json'), 'utf8'));
+    const written = JSON.parse(await fs.readFile(path.join(dir, '.unode', 'mcp.json'), 'utf8'));
     expect(written.mcpServers.github).toEqual({ command: 'npx' });
     expect(written.mcpServers.roam_team_bridge).toEqual({
       type: 'http',
@@ -130,7 +130,7 @@ describe('ClaudeHeadlessBackend team bridge MCP wiring', () => {
   });
 });
 
-describe('ClaudeHeadlessBackend command-permission gate (unify with roam.commandApproval)', () => {
+describe('ClaudeHeadlessBackend command-permission gate (unify with unode.commandApproval)', () => {
   it('mounts a per-agent permission server + --permission-prompt-tool (acceptEdits)', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'roam-claude-perm-'));
     const perm = fakeLocalServer();
@@ -159,7 +159,7 @@ describe('ClaudeHeadlessBackend command-permission gate (unify with roam.command
 
     expect(perm.starts).toBe(1);
     expect(perm.localTools.map((t) => t.name)).toEqual(['permission_prompt']);
-    const written = JSON.parse(await fs.readFile(path.join(dir, '.roam', 'mcp.json'), 'utf8'));
+    const written = JSON.parse(await fs.readFile(path.join(dir, '.unode', 'mcp.json'), 'utf8'));
     expect(written.mcpServers.roam_permission).toEqual({
       type: 'http',
       url: 'http://127.0.0.1:48123/mcp',
@@ -200,7 +200,7 @@ describe('ClaudeHeadlessBackend command-permission gate (unify with roam.command
   it('does not reference the permission server when the MCP config cannot be written', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'roam-claude-nowrite-'));
     const filePath = path.join(dir, 'cwd-is-a-file');
-    await fs.writeFile(filePath, 'x'); // workingDirectory is a FILE → .roam/mcp.json write fails
+    await fs.writeFile(filePath, 'x'); // workingDirectory is a FILE → .unode/mcp.json write fails
     const perm = fakeLocalServer();
     const spawn = fakeSpawn();
     const backend = new ClaudeHeadlessBackend(
@@ -242,7 +242,7 @@ describe('ClaudeHeadlessBackend command-permission gate (unify with roam.command
 
     expect(perm.starts).toBe(1);
     expect(perm.stops).toBe(1); // exit handler never fires on spawn error → explicit cleanup must run
-    await expect(fs.access(path.join(dir, '.roam', 'mcp.json'))).rejects.toBeTruthy(); // config removed
+    await expect(fs.access(path.join(dir, '.unode', 'mcp.json'))).rejects.toBeTruthy(); // config removed
 
     await fs.rm(dir, { recursive: true, force: true });
   });

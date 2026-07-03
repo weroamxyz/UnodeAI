@@ -11,7 +11,7 @@ import { join } from 'node:path';
 
 const root = process.cwd();
 const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
-const vsix = join(root, `roam-crew-${pkg.version}-bundled.vsix`);
+const vsix = join(root, `unodeai-${pkg.version}-bundled.vsix`);
 const vsce = process.platform === 'win32'
   ? join(root, 'node_modules', '.bin', 'vsce.cmd')
   : join(root, 'node_modules', '.bin', 'vsce');

@@ -7,7 +7,7 @@
  *    1. agent.modelParams.<field>           — explicit per-agent (team.json members[].modelParams)
  *    2. smartTierParams.<field>             — injected by Smart Mode at dispatch (F3, optional)
  *    3. legacy agent.temperature/maxTokens  — back-compat for old team.json (those two fields only)
- *    4. roam.modelDefaults.<field>          — global VS Code setting
+ *    4. unode.modelDefaults.<field>          — global VS Code setting
  *    5. HARD_DEFAULTS                        — last-resort built-ins
  *
  *  Pure of vscode: it reads globals through an injected ConfigStore, so it's unit-testable.
@@ -67,7 +67,7 @@ export class ModelParamResolver {
     return resolved;
   }
 
-  /** Read the global `roam.modelDefaults.*` settings into an AgentModelParams shape. */
+  /** Read the global `unode.modelDefaults.*` settings into an AgentModelParams shape. */
   private readGlobals(): AgentModelParams {
     const g: AgentModelParams = {};
     const temperature = this.config.get<number | null>('modelDefaults.temperature', null);

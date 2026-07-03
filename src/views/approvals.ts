@@ -7,9 +7,9 @@
 export type ApprovalKind = 'command' | 'write';
 
 export interface ApprovalSettings {
-  /** roam.commandApproval: none | ask | allowlist | all */
+  /** unode.commandApproval: none | ask | allowlist | all */
   command: string;
-  /** roam.writeApproval: none | ask */
+  /** unode.writeApproval: none | ask */
   write: string;
 }
 

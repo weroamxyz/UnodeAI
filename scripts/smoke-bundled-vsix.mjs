@@ -5,8 +5,8 @@ import { join, resolve } from 'node:path';
 
 const root = process.cwd();
 const pkgVersion = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version;
-const vsix = join(tmpdir(), 'roam-crew-vsix', `roam-crew-${pkgVersion}-bundled.vsix`);
-const smokeDir = join(tmpdir(), 'roam-crew-smoke');
+const vsix = join(tmpdir(), 'unodeai-vsix', `unodeai-${pkgVersion}-bundled.vsix`);
+const smokeDir = join(tmpdir(), 'unodeai-smoke');
 const launchPath = join(smokeDir, 'launch-smoke.cjs');
 const nodeBin = process.execPath;
 const testElectronModule = resolve(root, 'node_modules/@vscode/test-electron/out/index.js').replace(/\\/g, '\\\\');

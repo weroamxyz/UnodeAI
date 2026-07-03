@@ -175,7 +175,7 @@ describe('WorkflowEngine gated workflow (P2)', () => {
 
     const wf = engine.getWorkflow(inst.id)!;
     expect(wf.status).toBe('paused');
-    expect(String(wf.context.__blockedReason)).toContain('roam.commandApproval');
+    expect(String(wf.context.__blockedReason)).toContain('unode.commandApproval');
     expect(models.get('senior-dev')).toBe('deepseek-v4-pro'); // no escalation — it wasn't a failure
   });
 

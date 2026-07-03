@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
  *  UnodeAi - TeamRulesPanel  (#4b Team Rules)
- *  A small editor for the team's rules, persisted to `.roam/rules.md`. Those rules are already
+ *  A small editor for the team's rules, persisted to `.unode/rules.md`. Those rules are already
  *  injected into every agent's system prompt and refreshed each turn (see RulesFile / SessionManager),
  *  so anything written here governs how the crew works — e.g. "Developers must have the architect
  *  review their work before it's done." This panel is just a friendly front door to that file.
@@ -121,7 +121,7 @@ function getHtml(webview: vscode.Webview, scriptNonce: string, content: string):
 </head>
 <body>
   <h2>Team Rules</h2>
-  <p class="hint">Rules every agent in this team must follow. They're injected into each agent's instructions and refreshed every turn — so changes take effect on the next turn. Saved to <code>.roam/rules.md</code>.</p>
+  <p class="hint">Rules every agent in this team must follow. They're injected into each agent's instructions and refreshed every turn — so changes take effect on the next turn. Saved to <code>.unode/rules.md</code>.</p>
   <textarea id="rules" placeholder="${esc(PLACEHOLDER)}" spellcheck="false">${esc(content)}</textarea>
   <div class="row">
     <button id="save" type="button">Save Rules</button>

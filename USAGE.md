@@ -1,6 +1,6 @@
 # UnodeAi User Manual
 
-Version covered: UnodeAi 0.9.11
+Version covered: UnodeAi 0.9.14
 
 Product: Multi-model AI team extension for VS Code
 
@@ -68,7 +68,7 @@ Choose the secret name for your provider:
 | OpenRouter | `OPENROUTER_API_KEY` |
 | Custom OpenAI-compatible gateway | `CUSTOM_API_KEY` |
 
-Secrets are stored in VS Code SecretStorage. They are not written to `.roam/team.json`, settings files, chat exports, or source control.
+Secrets are stored in VS Code SecretStorage. They are not written to `.unode/team.json`, settings files, chat exports, or source control.
 
 **Zero data retention & no telemetry.** UnodeAi itself keeps no copy of your code or prompts and has no analytics, tracking, or phone-home of any kind. Chat history, team config, and keys all stay on your machine; your code is sent only to the model provider you configure (nothing else). Because UnodeAi works with any OpenAI-compatible endpoint, you can point it at a self-hosted / in-VPC model for provable, end-to-end zero-retention.
 
@@ -171,7 +171,7 @@ Use Plan when you want a review, estimate, architecture discussion, implementati
 
 Act mode lets an agent use its allowed tools. Depending on your settings, it may read files, write files, run approved commands, delegate to teammates, or use approved MCP tools. Agents can also **`apply_edit`** (a targeted edit — replace an exact snippet instead of resending the whole file; goes through the same checkpoint/approval safety path), **`search_files`** (regex/text → `file:line`, so they find code instead of writing scratch scripts) and **`delete_file`** (sandboxed and checkpointed, so a removal is restorable) — all stay inside the working folder.
 
-**Works with any model's tool names.** Roam runs many models, and each is trained on its own harness's tool names. When a model calls `Read` / `Bash` / `Write` / `Edit` / `LS` / `Grep` / `Task` (from Claude Code, Cursor, GPT, and others), Roam transparently maps it to the matching Roam tool and arguments — so a model's muscle memory just works rather than failing with "unknown tool".
+**Works with any model's tool names.** Unode runs many models, and each is trained on its own harness's tool names. When a model calls `Read` / `Bash` / `Write` / `Edit` / `LS` / `Grep` / `Task` (from Claude Code, Cursor, GPT, and others), Unode transparently maps it to the matching Unode tool and arguments — so a model's muscle memory just works rather than failing with "unknown tool".
 
 Use Act when you want the agent to do the work.
 
@@ -187,7 +187,7 @@ Your crew's Project Manager picks up the goal, delegates, and streams the run ba
 
 `@roam` runs on **your configured UnodeAi agents and models** — not the Chat panel's model — so you keep the multi-agent orchestration and cheap-model cost arbitrage. You need at least one team (run `UnodeAi: Create Default Team` first).
 
-Turn it off with the setting `roam.chatParticipant.enabled` if you want UnodeAi only in its sidebar.
+Turn it off with the setting `unode.chatParticipant.enabled` if you want UnodeAi only in its sidebar.
 
 ## 6. Run a PM-Led Crew
 
@@ -208,7 +208,7 @@ The PM can:
 2. Ask the Architect for public contracts and file ownership.
 3. Assign work to specialists.
 4. Run independent tasks in parallel when files do not overlap.
-5. Run `run_checks` using `roam.verifyCommand`.
+5. Run `run_checks` using `unode.verifyCommand`.
 6. Route failures back to the right teammate.
 7. Ask the Reviewer for a final PASS or FAIL.
 8. Summarize the outcome for you.
@@ -262,14 +262,14 @@ The Marketplace has two tabs:
 
 The bundled catalog lives in `marketplace/agents.json`, `marketplace/mcp.json`, and `marketplace/skills.json`.
 
-If `roam.marketplace.catalogUrl` is set and `roam.marketplace.fetchCatalog` is enabled, UnodeAi can merge a hosted catalog with the bundled catalog. If the hosted fetch fails, the bundled catalog still works.
+If `unode.marketplace.catalogUrl` is set and `unode.marketplace.fetchCatalog` is enabled, UnodeAi can merge a hosted catalog with the bundled catalog. If the hosted fetch fails, the bundled catalog still works.
 
 ## 9. Team Rules and Memory
 
 Team Rules are saved in:
 
 ```text
-.roam/rules.md
+.unode/rules.md
 ```
 
 Open the editor with:
@@ -307,12 +307,12 @@ Important provider settings:
 
 | Setting | Default | Purpose |
 |---|---|---|
-| `roam.defaultProvider` | `roam` | Provider used for new agents |
-| `roam.baseUrl` | `https://ai.weroam.xyz/v1` | Roam OpenAI-compatible gateway URL |
-| `roam.modelCatalogUrl` | empty | Optional hosted model catalog |
-| `roam.modelPrices` | `{}` | Manual price overrides |
-| `roam.pricingSources` | `[]` | Extra pricing sources |
-| `roam.priceGroup` | empty | Billing group for displayed prices |
+| `unode.defaultProvider` | `roam` | Provider used for new agents |
+| `unode.baseUrl` | `https://ai.weroam.xyz/v1` | Roam OpenAI-compatible gateway URL |
+| `unode.modelCatalogUrl` | empty | Optional hosted model catalog |
+| `unode.modelPrices` | `{}` | Manual price overrides |
+| `unode.pricingSources` | `[]` | Extra pricing sources |
+| `unode.priceGroup` | empty | Billing group for displayed prices |
 
 ### Model tuning
 
@@ -344,12 +344,12 @@ Relevant settings:
 
 | Setting | Purpose |
 |---|---|
-| `roam.smartMode.enabled` | Turn Smart Mode on or off |
-| `roam.smartMode.defaultTier` | Fallback tier |
-| `roam.smartMode.roleTiers` | Per-role tier overrides |
-| `roam.smartMode.taskTierHints` | Per-message-type tier hints |
-| `roam.modelTiers` | Provider/model matrix for tiers |
-| `roam.modelTierParams` | Tier-level model parameters |
+| `unode.smartMode.enabled` | Turn Smart Mode on or off |
+| `unode.smartMode.defaultTier` | Fallback tier |
+| `unode.smartMode.roleTiers` | Per-role tier overrides |
+| `unode.smartMode.taskTierHints` | Per-message-type tier hints |
+| `unode.modelTiers` | Provider/model matrix for tiers |
+| `unode.modelTierParams` | Tier-level model parameters |
 
 ## 11. Safety and Approvals
 
@@ -360,7 +360,7 @@ UnodeAi is designed to keep powerful agents observable and permissioned.
 Setting:
 
 ```text
-roam.commandApproval
+unode.commandApproval
 ```
 
 Modes:
@@ -369,13 +369,13 @@ Modes:
 |---|---|
 | `none` | Agents cannot run shell commands |
 | `ask` | Prompt before unapproved commands; default in current builds |
-| `allowlist` | Only commands matching `roam.allowedCommands` can run |
+| `allowlist` | Only commands matching `unode.allowedCommands` can run |
 | `all` | Allows most commands except catastrophic patterns; use only in a sandbox |
 
 Allowed command prefixes are configured with:
 
 ```text
-roam.allowedCommands
+unode.allowedCommands
 ```
 
 Default prefixes include `npm test`, `npm run build`, `npm run compile`, `npx tsc`, `git status`, `git diff`, and `git log`.
@@ -385,7 +385,7 @@ Default prefixes include `npm test`, `npm run build`, `npm run compile`, `npx ts
 Setting:
 
 ```text
-roam.writeApproval
+unode.writeApproval
 ```
 
 Modes:
@@ -408,7 +408,7 @@ MCP servers are default-deny. Servers that touch files, credentials, networks, b
 Set:
 
 ```text
-roam.verifyCommand
+unode.verifyCommand
 ```
 
 Examples:
@@ -421,14 +421,14 @@ npx tsc --noEmit
 
 The PM's `run_checks` tool uses this command to verify the whole project. This is the main backstop for cross-file breakage caused by parallel work.
 
-The command still obeys `roam.commandApproval`.
+The command still obeys `unode.commandApproval`.
 
 ## 13. Worktree Fan-Out
 
 Setting:
 
 ```text
-roam.concurrencyStrategy
+unode.concurrencyStrategy
 ```
 
 Modes:
@@ -436,9 +436,9 @@ Modes:
 | Mode | Behavior |
 |---|---|
 | `optimistic` | Shared workspace with conflict detection |
-| `worktree` | Eligible agents work in isolated git worktrees under `.roam/worktrees/` |
+| `worktree` | Eligible agents work in isolated git worktrees under `.unode/worktrees/` |
 
-Worktree mode requires a git repository with a clean tree. Each eligible agent works in its own worktree; when its turn finishes, its work is committed and merged into a Roam **integration branch** (`roam/integration`). Review it with:
+Worktree mode requires a git repository with a clean tree. Each eligible agent works in its own worktree; when its turn finishes, its work is committed and merged into a Unode **integration branch** (`unode/integration`). Review it with:
 
 ```text
 UnodeAi: Crew Worktrees (Review)
@@ -452,23 +452,23 @@ UnodeAi: Finalize Worktree Merges to Branch
 
 ### Verifier-as-gate (0.7.0)
 
-In worktree mode, before an agent's work merges into the integration branch, UnodeAi runs your **verify command** (`roam.verifyCommand` — e.g. `npm test`, `npx tsc --noEmit`) **inside that agent's worktree**:
+In worktree mode, before an agent's work merges into the integration branch, UnodeAi runs your **verify command** (`unode.verifyCommand` — e.g. `npm test`, `npx tsc --noEmit`) **inside that agent's worktree**:
 
 - **Pass →** the work merges to the integration branch.
 - **Fail →** the work is **held on the agent's own branch (not merged)** and the failing output is handed back to the agent to fix and finish again. Only verified work lands.
 
 So a crew only lands work that passes your project's own checks. The **Crew Worktrees (Review)** board shows each lane's status — **✓ verified / ✗ failing / ⚠ unverified** — and **flags any lane that passed by editing the test files** (a weak model can make checks green by weakening a test instead of fixing the code), so you can review those before finalizing.
 
-The gate requires `roam.verifyCommand` to be set **and** approved to run (common build/test commands like `npm test` / `npx tsc` are in `roam.allowedCommands` by default; a non-approved command is skipped rather than auto-run). With no verify command there's nothing to gate on, so merges proceed unchanged.
+The gate requires `unode.verifyCommand` to be set **and** approved to run (common build/test commands like `npm test` / `npx tsc` are in `unode.allowedCommands` by default; a non-approved command is skipped rather than auto-run). With no verify command there's nothing to gate on, so merges proceed unchanged.
 
 Additional worktree settings:
 
 | Setting | Default | Purpose |
 |---|---|---|
-| `roam.worktree.verifyBeforeMerge` | `true` | Gate merges on `roam.verifyCommand` passing in the agent's worktree (the verifier-as-gate) |
-| `roam.worktree.verifyTimeoutSeconds` | `300` | Hard timeout for the verify command (10–3600); on timeout it's killed and treated as a failure |
-| `roam.worktree.autoMerge` | `false` | Automatically land clean integration work into the base branch |
-| `roam.worktree.maxParallel` | `4` | Maximum isolated worktrees at once |
+| `unode.worktree.verifyBeforeMerge` | `true` | Gate merges on `unode.verifyCommand` passing in the agent's worktree (the verifier-as-gate) |
+| `unode.worktree.verifyTimeoutSeconds` | `300` | Hard timeout for the verify command (10–3600); on timeout it's killed and treated as a failure |
+| `unode.worktree.autoMerge` | `false` | Automatically land clean integration work into the base branch |
+| `unode.worktree.maxParallel` | `4` | Maximum isolated worktrees at once |
 
 ## 14. Dashboard and Activity
 
@@ -526,7 +526,7 @@ Useful commands:
 | `UnodeAi: Show Dashboard` | Open dashboard |
 | `UnodeAi: Open Settings` | Open settings panel |
 | `UnodeAi: Open Marketplace` | Open marketplace |
-| `UnodeAi: Edit Team Rules` | Edit `.roam/rules.md` |
+| `UnodeAi: Edit Team Rules` | Edit `.unode/rules.md` |
 | `UnodeAi: Restore File Checkpoint` | Restore a checkpointed file |
 | `UnodeAi: Crew Worktrees (Review)` | Review worktree integration state |
 | `UnodeAi: Finalize Worktree Merges to Branch` | Land worktree integration branch |
@@ -539,15 +539,15 @@ Run `UnodeAi: Set Provider API Key` and store the right secret for the provider.
 
 ### A command was blocked
 
-Check `roam.commandApproval`. If using `allowlist`, add the command prefix to `roam.allowedCommands`. If using `ask`, approve the command from the Chat approval card.
+Check `unode.commandApproval`. If using `allowlist`, add the command prefix to `unode.allowedCommands`. If using `ask`, approve the command from the Chat approval card.
 
 ### A write is waiting for approval
 
-If `roam.writeApproval` is `ask`, approve or deny the diff in the Chat panel.
+If `unode.writeApproval` is `ask`, approve or deny the diff in the Chat panel.
 
 ### PM cannot run checks
 
-Set `roam.verifyCommand` and make sure `roam.commandApproval` allows that command.
+Set `unode.verifyCommand` and make sure `unode.commandApproval` allows that command.
 
 ### A model rejects `reasoning_effort` or `response_format`
 
@@ -555,7 +555,7 @@ Clear that field for the agent or tier. Many gateways reject optional model para
 
 ### Agents made conflicting edits
 
-Use the error message to re-read and retry the affected file. For larger parallel jobs, consider `roam.concurrencyStrategy = worktree`.
+Use the error message to re-read and retry the affected file. For larger parallel jobs, consider `unode.concurrencyStrategy = worktree`.
 
 ### Team state feels stale
 
@@ -574,13 +574,13 @@ For complex features:
 1. Ask the PM.
 2. Require the Architect to publish contracts first.
 3. Partition files before parallel work.
-4. Set `roam.verifyCommand`.
+4. Set `unode.verifyCommand`.
 5. Require an independent Reviewer PASS before considering work done.
 
 For sensitive codebases:
 
 1. Use Plan mode for initial review.
-2. Set `roam.commandApproval = ask`.
-3. Set `roam.writeApproval = ask`.
+2. Set `unode.commandApproval = ask`.
+3. Set `unode.writeApproval = ask`.
 4. Keep MCP servers default-deny.
-5. Store project constraints in `.roam/rules.md`.
+5. Store project constraints in `.unode/rules.md`.

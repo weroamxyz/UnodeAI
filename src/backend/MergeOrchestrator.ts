@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
  *  UnodeAi - MergeOrchestrator (v0.6.x worktree fan-out, Slice C) — CONTRACT
  *  The differentiator: after an isolated agent finishes in its worktree, commit its branch, merge it
- *  into a shared `roam/integration` staging branch (so the PM reviews the COMBINED result, and `main`
+ *  into a shared `unode/integration` staging branch (so the PM reviews the COMBINED result, and `main`
  *  gets one clean merge), surface conflicts for agent/PM resolution, and finalize integration → base
  *  on approval.
  *
@@ -10,7 +10,7 @@
  *  without coordinating — Slice B wires the call sites against it.
  *
  *  Key mechanic (so the user's checkout is never disturbed): merges happen in a DEDICATED integration
- *  worktree (`.roam/worktrees/_integration`, checked out to `roam/integration`) via `git -C`, NOT in
+ *  worktree (`.unode/worktrees/_integration`, checked out to `unode/integration`) via `git -C`, NOT in
  *  the main checkout. Conflicts are detected and `git merge --abort`ed, leaving integration clean.
  *--------------------------------------------------------------------------------------------*/
 
@@ -25,7 +25,7 @@ export interface MergeResult {
   status: MergeStatus;
   /** The agent branch that was merged (or attempted). */
   branch: string;
-  /** The staging branch merges land on (default `roam/integration`). */
+  /** The staging branch merges land on (default `unode/integration`). */
   integrationBranch: string;
   /** On `conflict`: the files with merge conflicts (workspace-relative), for agent/PM feedback. */
   conflictedFiles?: string[];
@@ -74,7 +74,7 @@ export class GitMergeOrchestrator implements MergeOrchestrator {
     private readonly repoRoot: string,
     private readonly opts: { integrationBranch?: string; git?: GitRunner } = {}
   ) {
-    this.integrationBranch = opts.integrationBranch ?? 'roam/integration';
+    this.integrationBranch = opts.integrationBranch ?? 'unode/integration';
     this.git = opts.git ?? defaultGitRunner;
     this.integrationPath = path.join(repoRoot, WORKTREES_DIR, '_integration');
   }

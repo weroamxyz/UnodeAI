@@ -2,7 +2,7 @@
  *  UnodeAi - ProjectConventions  (A1 + A2: agent robustness)
  *  Auto-detects how THIS project is built/tested (package.json scripts + package manager) and
  *  produces a guidance block that's injected into every agent's system prompt via the same
- *  project-context channel as .roam/rules.md.
+ *  project-context channel as .unode/rules.md.
  *
  *  Why: weaker/cheaper agents don't reliably read package.json before running commands — they invent
  *  `npx vitest` instead of the project's `npm test`, hit "No test suite found", and misattribute it to
@@ -29,7 +29,7 @@ const defaultLister: DirLister = async (dir) => {
 const MAX_SCRIPTS = 25;
 const MAX_SCRIPT_LEN = 120;
 /** Dirs never worth showing an agent (generated/vendored/tooling). */
-const IGNORED_DIRS = new Set(['node_modules', '.git', 'out', 'out-e2e', 'dist', 'build', '.vscode-test', 'coverage', '.roam', '.npm-cache', '.worktrees', '.vscode', 'tmp']);
+const IGNORED_DIRS = new Set(['node_modules', '.git', 'out', 'out-e2e', 'dist', 'build', '.vscode-test', 'coverage', '.unode', '.npm-cache', '.worktrees', '.vscode', 'tmp']);
 const MAX_DIRS = 24;
 
 const EMPTY_INFO: ProjectCommandInfo = { packageManager: 'npm', scripts: {} };

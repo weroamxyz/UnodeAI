@@ -7,7 +7,7 @@
  *  arbitrage, the Dashboard needs a dollar figure — so we estimate it from a per-model price table.
  *
  *  Prices are USD per 1M tokens and are APPROXIMATE; users/Roam can override or extend the table
- *  via the `roam.modelPrices` setting. Matching is exact-id first, then the longest table key that
+ *  via the `unode.modelPrices` setting. Matching is exact-id first, then the longest table key that
  *  the model id contains (so `claude-opus-4-5` and `anthropic/claude-opus…` both map to opus).
  *--------------------------------------------------------------------------------------------*/
 
@@ -24,7 +24,7 @@ export interface ModelPrice {
  * Roam user actually pays, so estimates match their bill. Conversion (new-api convention,
  * verified against gpt-4o = OpenAI list): input = model_ratio × 2, output = model_ratio ×
  * completion_ratio × 2, then apply live gateway discounts when available. Override/extend via the
- * `roam.modelPrices` setting.
+ * `unode.modelPrices` setting.
  *
  * Keys match by substring (longest-first), so `claude-opus` covers claude-opus-4-5/4-6/4-7/4-8.
  */

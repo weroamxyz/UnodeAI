@@ -37,7 +37,7 @@ describe('Verifier (v0.7.0 verifier-as-gate)', () => {
     expect(ran).toBe(false);
   });
 
-  it('skips (does NOT auto-run) a command awaiting approval in "ask" mode — respects roam.commandApproval', async () => {
+  it('skips (does NOT auto-run) a command awaiting approval in "ask" mode — respects unode.commandApproval', async () => {
     let ran = false;
     const v = new Verifier({
       command: () => 'make check',

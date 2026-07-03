@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
  *  UnodeAi - SharedMemory
- *  Team-shared append-only notes at `<workspaceRoot>/.roam/memory/notes.md`.
+ *  Team-shared append-only notes at `<workspaceRoot>/.unode/memory/notes.md`.
  *
  *  Kept vscode-free (file IO is injectable) so it is unit-testable; extension.ts wires the
  *  FileSystemWatcher that refreshes the cache when the file changes.
@@ -27,7 +27,7 @@ export class SharedMemory {
     private mkdir: DirCreator = defaultMkdir
   ) {}
 
-  /** Absolute path of the shared memory notes file (`.roam/memory/notes.md`). */
+  /** Absolute path of the shared memory notes file (`.unode/memory/notes.md`). */
   get path(): string {
     return this.filePath;
   }
@@ -74,9 +74,9 @@ export class SharedMemory {
   }
 }
 
-/** Build the `.roam/memory/notes.md` path under a workspace root. */
+/** Build the `.unode/memory/notes.md` path under a workspace root. */
 export function memoryFilePath(workspaceRoot: string): string {
-  return path.join(workspaceRoot, '.roam', 'memory', 'notes.md');
+  return path.join(workspaceRoot, '.unode', 'memory', 'notes.md');
 }
 
 /** Collapse newlines and surrounding whitespace into a single readable line. */

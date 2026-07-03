@@ -37,21 +37,23 @@ import { decideCommandPermission, PERMISSION_TOOL_NAME } from './commandPermissi
 import { projectContextBlock, replaceProjectContextBlock } from '../session/RulesFile';
 
 /** Relative, space-free path for the MCP config we hand claude (safe for shell-spawn on Windows).
- *  Lives under .roam/ — which is gitignored — so a leftover (e.g. after an abnormal exit) carrying the
+ *  Lives under .unode/ — which is gitignored — so a leftover (e.g. after an abnormal exit) carrying the
  *  local team-bridge token can never be accidentally committed. Forward slash works for the CLI arg on
  *  every platform. */
-const MCP_CONFIG_FILE = '.roam/mcp.json';
+const MCP_CONFIG_FILE = '.unode/mcp.json';
 
 export interface ClaudeHeadlessBackendDeps {
   localMcpServerFactory?: () => LocalMcpServer;
   teamMcpBridge?: TeamMcpBridge;
   spawn?: typeof nodeSpawn;
-  /** Command-approval gate so a Claude agent's shell commands honor roam.commandApproval (the approval
+  /** Command-approval gate so a Claude agent's shell commands honor unode.commandApproval (the approval
    *  card) — wired into claude via --permission-prompt-tool. Absent → no gating (legacy behavior). */
   commandPermission?: {
     policy?: CommandPolicy;
     /** Approver bound to THIS agent's name (so the card says e.g. "Senior Developer wants to run …"). */
     requestApproval?: CommandApprover;
+    /** Live Workspace Trust check; when it returns false, shell commands are hard-denied (untrusted workspace). */
+    isTrusted?: () => boolean;
     /** Server factory for the per-agent permission server; defaults to createLocalMcpServer (injectable for tests). */
     createServer?: () => LocalMcpServer;
   };
@@ -71,7 +73,7 @@ export class ClaudeHeadlessBackend implements AgentBackend {
 
   /**
    * @param mcpConfig optional claude-native MCP config; when present we write it to a relative
-   *        `.roam-mcp.json` in the agent cwd and pass `--mcp-config`. claude hosts the servers
+   *        `.unode-mcp.json` in the agent cwd and pass `--mcp-config`. claude hosts the servers
    *        itself (we do NOT use the in-process MCPHub for claude agents).
    * @param resolvedParams optional resolved model params (F2). claude's params are set at spawn, so
    *        only fields with a CLI flag apply: `reasoning_effort` → `--effort`. The rest are ignored
@@ -117,7 +119,7 @@ export class ClaudeHeadlessBackend implements AgentBackend {
     // directly. We keep the historically-working `shell:true` form (the two shell-free alternatives
     // both prevented claude from starting on Windows). The DEP0190 "args + shell" deprecation is
     // cosmetic here: tokens are space-free by construction (fixed flags + space-free model/permission
-    // ids + the relative .roam-mcp.json path); the long role/system prompt is folded into the first
+    // ids + the relative .unode-mcp.json path); the long role/system prompt is folded into the first
     // user turn (see sendUserTurn), never the argv.
     const useShell = process.platform === 'win32';
     const spawn = this.deps.spawn ?? nodeSpawn;
@@ -172,7 +174,7 @@ export class ClaudeHeadlessBackend implements AgentBackend {
       });
     } catch (err) {
       // Spawn failed (e.g. missing/broken claude binary): the 'exit' handler won't fire, so the local
-      // permission/team-bridge servers we started above + the .roam/mcp.json we wrote would leak. Clean up
+      // permission/team-bridge servers we started above + the .unode/mcp.json we wrote would leak. Clean up
       // explicitly, then rethrow so SessionManager sees the failed start. (Pre-0.8.79 this leaked only the
       // PM bridge; now it would leak a permission server for every non-autoApprove Claude agent.)
       this.proc = undefined;
@@ -287,7 +289,7 @@ export class ClaudeHeadlessBackend implements AgentBackend {
     const mcpServers: Record<string, ClaudeMcpServerSpec> = { ...(this.mcpConfig?.mcpServers ?? {}) };
 
     // 1) Command-approval gate for EVERY claude agent: a per-agent local server hosting the
-    //    permission-prompt tool, so shell commands honor roam.commandApproval (the approval card) — the
+    //    permission-prompt tool, so shell commands honor unode.commandApproval (the approval card) — the
     //    same gate OpenAI-compat agents already get. Only when we'll actually be asked (acceptEdits mode;
     //    bypassPermissions never calls the tool).
     if (this.shouldGateCommands()) {
@@ -339,6 +341,7 @@ export class ClaudeHeadlessBackend implements AgentBackend {
         const decision = await decideCommandPermission(toolName, input, {
           policy: gate?.policy,
           requestApproval: gate?.requestApproval,
+          isTrusted: gate?.isTrusted ? gate.isTrusted() : undefined,
         });
         return JSON.stringify(decision);
       },
@@ -352,7 +355,7 @@ export class ClaudeHeadlessBackend implements AgentBackend {
     }
     try {
       const abs = path.join(cwd, MCP_CONFIG_FILE);
-      fs.mkdirSync(path.dirname(abs), { recursive: true }); // ensure .roam/ exists
+      fs.mkdirSync(path.dirname(abs), { recursive: true }); // ensure .unode/ exists
       fs.writeFileSync(abs, JSON.stringify(mcpConfig, null, 2), 'utf8');
       this.mcpConfigPath = abs;
     } catch (err) {

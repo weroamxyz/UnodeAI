@@ -72,8 +72,8 @@ function endpointDefaults(providerKey: string): { baseUrl: string; model: string
 }
 
 function configuredRoamBaseUrl(): string {
-  // Never let a stale persisted unode/OpenAI roam.baseUrl win — collapse it to the weroam gateway.
-  return canonicalRoamBaseUrl(vscode.workspace.getConfiguration('roam').get<string>('baseUrl', DEFAULT_PROVIDER_CONFIGS.roam.baseUrl));
+  // Never let a stale persisted unode/OpenAI unode.baseUrl win — collapse it to the weroam gateway.
+  return canonicalRoamBaseUrl(vscode.workspace.getConfiguration('unode').get<string>('baseUrl', DEFAULT_PROVIDER_CONFIGS.roam.baseUrl));
 }
 
 function modelCatalogBaseUrl(providerKey: string, baseUrl?: string): string | undefined {
@@ -210,7 +210,7 @@ async function instantiateTeam(
   // F2: after creating a team, proactively suggest enabling commands
   const accepted = await promptCommandApproval(d.commandPolicy.approvalMode);
   if (accepted) {
-    const cfg = vscode.workspace.getConfiguration('roam');
+    const cfg = vscode.workspace.getConfiguration('unode');
     d.commandPolicy.reload(
       cfg.get<'none' | 'allowlist' | 'all'>('commandApproval', 'none') as any,
       cfg.get<string[]>('allowedCommands', [])
@@ -232,7 +232,7 @@ export async function createDefaultTeam(d: DialogDeps): Promise<AgentConfig[]> {
 /**
  * D1 UI: create a new team from a preset, or switch by replacing the current one.
  * Persistence model note: UnodeAi currently stores ONE active roster in workspaceState,
- * optionally mirrored/seeded by one `.roam/team.json`; there is no multi-team profile store.
+ * optionally mirrored/seeded by one `.unode/team.json`; there is no multi-team profile store.
  */
 export type TeamPresetItem = vscode.QuickPickItem & {
   roles: (keyof typeof ROLE_TEMPLATES)[];
@@ -294,7 +294,7 @@ async function maybeOfferVerifyCommand(pick: TeamPresetItem): Promise<void> {
   if (!command) {
     return;
   }
-  const cfg = vscode.workspace.getConfiguration('roam');
+  const cfg = vscode.workspace.getConfiguration('unode');
   const current = cfg.get<string>('verifyCommand', '').trim();
   if (current === command) {
     // Already configured — confirm it so the user knows the gate is wired for this crew (no silent no-op).
@@ -305,19 +305,19 @@ async function maybeOfferVerifyCommand(pick: TeamPresetItem): Promise<void> {
   // a Team Pack, and it changes how the PM reports "done" (verified-only). The user still decides.
   if (!current) {
     const choice = await vscode.window.showInformationMessage(
-      `${pick.teamLabel} works best with a verification command so "only verified work lands". Set roam.verifyCommand to "${command}"?`,
+      `${pick.teamLabel} works best with a verification command so "only verified work lands". Set unode.verifyCommand to "${command}"?`,
       { modal: true },
       'Use Verify Command',
       'Skip'
     );
     if (choice === 'Use Verify Command') {
       await cfg.update('verifyCommand', command, vscode.ConfigurationTarget.Workspace);
-      void vscode.window.showInformationMessage(`roam.verifyCommand set to "${command}" for ${pick.teamLabel}.`);
+      void vscode.window.showInformationMessage(`unode.verifyCommand set to "${command}" for ${pick.teamLabel}.`);
     }
     return;
   }
   const choice = await vscode.window.showWarningMessage(
-    `roam.verifyCommand is already "${current}". Replace it with "${command}" for ${pick.teamLabel}?`,
+    `unode.verifyCommand is already "${current}". Replace it with "${command}" for ${pick.teamLabel}?`,
     { modal: true },
     'Replace',
     'Keep Existing'

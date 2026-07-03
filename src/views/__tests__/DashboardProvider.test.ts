@@ -41,8 +41,8 @@ describe('Dashboard Mission Control lanes', () => {
     expect(html).toContain('src/cart.ts, test/cart.test.ts');
     expect(html).toContain('$0.42');
     expect(html).toContain('25%');
-    expect(html).toContain('command:roam.chatWithAgent?%5B%22dev-1%22%5D');
-    expect(html).toContain('command:roam.showAgentTerminal?%5B%22dev-1%22%5D');
+    expect(html).toContain('command:unode.chatWithAgent?%5B%22dev-1%22%5D');
+    expect(html).toContain('command:unode.showAgentTerminal?%5B%22dev-1%22%5D');
   });
 
   it('uses delegation progress as the current lane task and escapes it', () => {
@@ -64,13 +64,13 @@ describe('Dashboard Mission Control lanes', () => {
   it('shows worktree verification only when a worktree review is supplied', () => {
     const review: WorktreeReview = {
       base: 'main',
-      integrationBranch: 'roam/integration',
+      integrationBranch: 'unode/integration',
       hasIntegration: true,
       lanes: [{
         agentId: 'dev-1',
         agent: 'Senior Dev',
-        branch: 'roam/dev',
-        path: 'C:/repo/.roam/worktrees/dev',
+        branch: 'unode/dev',
+        path: 'C:/repo/.unode/worktrees/dev',
         verification: { status: 'passed', command: 'npm test', output: 'ok' },
         changedFiles: ['src/worktree-only.ts'],
       }],
@@ -100,22 +100,22 @@ describe('Dashboard Mission Control lanes', () => {
     });
     const review: WorktreeReview = {
       base: 'main',
-      integrationBranch: 'roam/integration',
+      integrationBranch: 'unode/integration',
       hasIntegration: true,
       lanes: [
         {
           agentId: 'dev-a',
           agent: 'Developer',
-          branch: 'roam/dev-a',
-          path: 'C:/repo/.roam/worktrees/dev-a',
+          branch: 'unode/dev-a',
+          path: 'C:/repo/.unode/worktrees/dev-a',
           verification: { status: 'passed', command: 'npm test', output: 'ok' },
           changedFiles: ['src/dev-a.ts'],
         },
         {
           agentId: 'dev-b',
           agent: 'Developer',
-          branch: 'roam/dev-b',
-          path: 'C:/repo/.roam/worktrees/dev-b',
+          branch: 'unode/dev-b',
+          path: 'C:/repo/.unode/worktrees/dev-b',
           verification: { status: 'failed', command: 'npm test', output: 'nope' },
           changedFiles: ['src/dev-b.ts'],
         },
@@ -137,6 +137,6 @@ describe('Dashboard Mission Control lanes', () => {
   it('renders a clean empty state', () => {
     const html = renderMissionControlLanes([]);
     expect(html).toContain('No agents configured yet.');
-    expect(html).toContain('command:roam.createTeamPreset');
+    expect(html).toContain('command:unode.createTeamPreset');
   });
 });

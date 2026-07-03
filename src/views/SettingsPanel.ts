@@ -72,7 +72,7 @@ export interface SettingsPanelDeps {
   bridge: SettingsBridge;
   /** Prompt (masked) for a secret and store it; returns true if stored. */
   promptAndStoreSecret: (secretName: string) => Promise<boolean>;
-  /** Open the .roam/team.json file (where MCP servers are configured). */
+  /** Open the .unode/team.json file (where MCP servers are configured). */
   openTeamFile: () => void;
   /** Wipe this workspace's Roam state (roster/chat/messages/snapshots/workflows). Optional. */
   resetWorkspace?: () => void;
@@ -205,10 +205,10 @@ export class SettingsPanel {
           return;
         }
         case 'openMcpMarketplace':
-          await vscode.commands.executeCommand('roam.openMarketplace', 'mcp');
+          await vscode.commands.executeCommand('unode.openMarketplace', 'mcp');
           return;
         case 'openNativeSettings':
-          await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:roam.roam-crew');
+          await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:unode.unodeai');
           return;
         case 'openTeamFile':
           this.deps.openTeamFile();
@@ -307,7 +307,7 @@ export class SettingsPanel {
     const inUseProviders = new Set(agents.map((a) => a.providerId).filter(Boolean));
     const providerCards = providers.map((p) => this.providerCard(p, inUseProviders.has(p.providerId))).join('');
     const mcpRows = mcp.length === 0
-      ? '<div class="empty">No MCP servers registered. Configure them in .roam/team.json.</div>'
+      ? '<div class="empty">No MCP servers registered. Configure them in .unode/team.json.</div>'
       : mcp.map((m) => this.mcpRow(m)).join('');
     const smartSection = smart ? this.smartModeSection(smart, agents) : '<div class="empty">Smart Mode unavailable.</div>';
     const tuningCards = agents.length === 0
@@ -407,7 +407,7 @@ export class SettingsPanel {
   </div>
 
   <div class="section" id="tuning">
-    <p class="meta">Per-agent model &amp; sampling parameters. Saved to <code>.roam/team.json</code>. Sampling
+    <p class="meta">Per-agent model &amp; sampling parameters. Saved to <code>.unode/team.json</code>. Sampling
     params apply on the agent's next turn (OpenAI-compatible backends); context window applies on next start.</p>
     ${tuningCards}
   </div>
@@ -420,14 +420,14 @@ export class SettingsPanel {
     <div class="signup-banner">
       <div>
         <div class="name">Add MCP servers from the Marketplace</div>
-        <p class="meta">Browse curated MCP servers and install them in one click — they appear here, ready to grant to an agent. You can still hand-edit <code>.roam/team.json</code> for custom servers.</p>
+        <p class="meta">Browse curated MCP servers and install them in one click — they appear here, ready to grant to an agent. You can still hand-edit <code>.unode/team.json</code> for custom servers.</p>
       </div>
       <div class="actions">
         <button class="btn primary" data-command="openMcpMarketplace">Browse MCP Marketplace</button>
       </div>
     </div>
     ${mcpRows}
-    <div style="margin-top:12px"><button class="btn" data-command="openTeamFile">Open .roam/team.json</button></div>
+    <div style="margin-top:12px"><button class="btn" data-command="openTeamFile">Open .unode/team.json</button></div>
   </div>
 
   <div class="section" id="more">
@@ -766,7 +766,7 @@ export class SettingsPanel {
         </div>
         <p class="meta">Auto-pick a model tier per task instead of a fixed model per agent. Precedence:
         explicit task tier → task-type hint → role override → role template → default tier. Applies on the
-        agent's next turn (OpenAI-compatible backends). Saved to VS Code settings (<code>roam.smartMode.*</code>).</p>
+        agent's next turn (OpenAI-compatible backends). Saved to VS Code settings (<code>unode.smartMode.*</code>).</p>
         <div class="field" style="max-width:220px;margin-top:8px">
           <label>Default tier</label>
           ${tierSelect(s.defaultTier, 'data-smart="defaultTier"', false)}
@@ -776,7 +776,7 @@ export class SettingsPanel {
       <div class="card">
         <div class="name">Tier → model matrix</div>
         <p class="meta">Each tier's model per provider (the "2–3 models" each role can run). Edits save to
-        <code>roam.modelTiers</code>; blanks fall back to the built-in defaults.</p>
+        <code>unode.modelTiers</code>; blanks fall back to the built-in defaults.</p>
         <p class="meta" style="color:var(--vscode-errorForeground)">⚠ Use each provider's <b>exact</b> model id — the
         same model is named differently per provider (e.g. <code>claude-opus-4-8</code> on Roam/Anthropic vs
         <code>anthropic/claude-opus-4</code> on OpenRouter). A blank cell falls back to another provider's id, which

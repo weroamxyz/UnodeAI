@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
  *  UnodeAi - WorktreeManager (v0.6.x worktree fan-out, Slice A)
- *  Lifecycle for per-agent git worktrees under .roam/worktrees/ — the isolation substrate that lets
+ *  Lifecycle for per-agent git worktrees under .unode/worktrees/ — the isolation substrate that lets
  *  parallel agents edit without stomping each other's branch. Pure git wrapper: no agent-lifecycle
  *  coupling, so it's unit-testable against a throwaway repo. Wiring into the session lives elsewhere.
  *
@@ -26,7 +26,7 @@ export interface Worktree {
 export type GitRunner = (args: string[], cwd: string) => Promise<{ code: number; stdout: string; stderr: string }>;
 
 /** Relative location of per-agent worktrees inside the repo (mirrors Kilo's `.kilo/worktrees/`). */
-export const WORKTREES_DIR = path.join('.roam', 'worktrees');
+export const WORKTREES_DIR = path.join('.unode', 'worktrees');
 
 const defaultGitRunner: GitRunner = (args, cwd) =>
   new Promise((resolve) => {
@@ -57,7 +57,7 @@ export class WorktreeManager {
    * off HEAD — i.e. no modified/staged tracked files AND no genuinely-untracked source files. We count
    * untracked files (a freshly-created `src/app.js` that was never committed does NOT exist in a new
    * worktree, so isolating an agent there breaks its edits with "outside working folder" — better to fall
-   * back to the shared workspace). We DO ignore Roam/editor state dirs (`.roam/`, `.vscode/`), which are
+   * back to the shared workspace). We DO ignore Roam/editor state dirs (`.unode/`, `.vscode/`), which are
    * commonly untracked but don't affect branching a worktree. (.gitignored files never show here.)
    */
   async isClean(): Promise<boolean> {
@@ -72,19 +72,19 @@ export class WorktreeManager {
       .filter((l) => {
         // porcelain v1: "XY <path>"; strip the 2-char status + space, and any surrounding quotes.
         const p = l.slice(3).replace(/^"|"$/g, '');
-        return !p.startsWith('.roam/') && !p.startsWith('.vscode/');
+        return !p.startsWith('.unode/') && !p.startsWith('.vscode/');
       });
     return significant.length === 0;
   }
 
   /**
-   * Create a worktree at `.roam/worktrees/<name>` on a new branch. Defaults: a short friendly name
-   * and `roam/<name>` branch off HEAD. Serialized against other create/remove calls.
+   * Create a worktree at `.unode/worktrees/<name>` on a new branch. Defaults: a short friendly name
+   * and `unode/<name>` branch off HEAD. Serialized against other create/remove calls.
    */
   async create(opts: { name?: string; branch?: string; baseRef?: string; agentId?: string } = {}): Promise<Worktree> {
     return this.serializeWrite(async () => {
       const name = opts.name ?? friendlyName();
-      const branch = opts.branch ?? `roam/${name}`;
+      const branch = opts.branch ?? `unode/${name}`;
       const abs = path.join(this.repoRoot, WORKTREES_DIR, name);
       await this.ensureExcluded();
       const args = ['worktree', 'add', '-b', branch, abs];
@@ -116,7 +116,7 @@ export class WorktreeManager {
       if (r.code !== 0) {
         throw new Error(`git worktree remove failed for "${wtPath}": ${(r.stderr || r.stdout).trim()}`);
       }
-      // Best-effort branch cleanup (audit #1): leftover roam/<name> branches are otherwise orphaned and
+      // Best-effort branch cleanup (audit #1): leftover unode/<name> branches are otherwise orphaned and
       // collide with a later same-name `worktree add -b`. Ignore failure — an extra branch is harmless.
       if (opts.pruneBranch && typeof target !== 'string' && target.branch) {
         await this.git(['branch', '-D', target.branch], this.repoRoot);
@@ -131,7 +131,7 @@ export class WorktreeManager {
     return run;
   }
 
-  /** Add `.roam/worktrees/` to the common git exclude so the worktree dirs never show as untracked. */
+  /** Add `.unode/worktrees/` to the common git exclude so the worktree dirs never show as untracked. */
   private async ensureExcluded(): Promise<void> {
     const gitDir = await this.git(['rev-parse', '--git-common-dir'], this.repoRoot);
     const rawDir = gitDir.code === 0 && gitDir.stdout.trim() ? gitDir.stdout.trim() : path.join(this.repoRoot, '.git');

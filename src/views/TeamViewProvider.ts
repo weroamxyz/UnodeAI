@@ -15,7 +15,7 @@ import { Checkpoint } from '../backend/Checkpoints';
 import { ChangedFileSummary, groupChangedFilesByAgent } from './checkpointSummary';
 
 export class TeamViewProvider implements vscode.WebviewViewProvider {
-  public static readonly viewType = 'roam.teamPanel';
+  public static readonly viewType = 'unode.teamPanel';
 
   private _view?: vscode.WebviewView;
   /** Compact mode: each agent collapses to a small icon chip to free vertical space for Chat/Messages. */
@@ -72,63 +72,63 @@ export class TeamViewProvider implements vscode.WebviewViewProvider {
           this.sessionManager.remove(agentId);
           break;
         case 'sendMessage':
-          vscode.commands.executeCommand('roam.sendMessage');
+          vscode.commands.executeCommand('unode.sendMessage');
           break;
         case 'showOutput':
-          vscode.commands.executeCommand('roam.showAgentOutput', agentId);
+          vscode.commands.executeCommand('unode.showAgentOutput', agentId);
           break;
         case 'showTerminal':
-          vscode.commands.executeCommand('roam.showAgentTerminal', agentId);
+          vscode.commands.executeCommand('unode.showAgentTerminal', agentId);
           break;
         case 'chatAgent':
-          vscode.commands.executeCommand('roam.chatWithAgent', agentId);
+          vscode.commands.executeCommand('unode.chatWithAgent', agentId);
           break;
         case 'showCheckpointDiff':
-          vscode.commands.executeCommand('roam.showCheckpointDiff', msg.checkpointId);
+          vscode.commands.executeCommand('unode.showCheckpointDiff', msg.checkpointId);
           break;
         case 'editAgent':
-          vscode.commands.executeCommand('roam.openAgentBuilder', agentId);
+          vscode.commands.executeCommand('unode.openAgentBuilder', agentId);
           break;
         case 'openAgentBuilder':
-          vscode.commands.executeCommand('roam.openAgentBuilder');
+          vscode.commands.executeCommand('unode.openAgentBuilder');
           break;
         case 'createDefaultTeam':
           // Route the empty-state "Create Team" card through the picker (software or knowledge-work),
           // so every entry point is consistent (menu / onboarding / panel).
-          vscode.commands.executeCommand('roam.createTeamPreset');
+          vscode.commands.executeCommand('unode.createTeamPreset');
           break;
         case 'addAgent':
-          vscode.commands.executeCommand('roam.addAgent');
+          vscode.commands.executeCommand('unode.addAgent');
           break;
         case 'openMarketplace':
-          vscode.commands.executeCommand('roam.openMarketplace');
+          vscode.commands.executeCommand('unode.openMarketplace');
           break;
         case 'openSettings':
-          vscode.commands.executeCommand('roam.openSettings');
+          vscode.commands.executeCommand('unode.openSettings');
           break;
         case 'createTeamPreset':
-          vscode.commands.executeCommand('roam.createTeamPreset');
+          vscode.commands.executeCommand('unode.createTeamPreset');
           break;
         case 'editTeamRules':
-          vscode.commands.executeCommand('roam.editTeamRules');
+          vscode.commands.executeCommand('unode.editTeamRules');
           break;
         case 'restoreCheckpoint':
-          vscode.commands.executeCommand('roam.restoreCheckpoint');
+          vscode.commands.executeCommand('unode.restoreCheckpoint');
           break;
         case 'startAllAgents':
-          vscode.commands.executeCommand('roam.startAllAgents');
+          vscode.commands.executeCommand('unode.startAllAgents');
           break;
         case 'stopAllAgents':
-          vscode.commands.executeCommand('roam.stopAllAgents');
+          vscode.commands.executeCommand('unode.stopAllAgents');
           break;
         case 'startSolo':
-          vscode.commands.executeCommand('roam.startSolo');
+          vscode.commands.executeCommand('unode.startSolo');
           break;
         case 'startSoloActive':
-          vscode.commands.executeCommand('roam.startSoloActive');
+          vscode.commands.executeCommand('unode.startSoloActive');
           break;
         case 'runDemoTask':
-          vscode.commands.executeCommand('roam.runDemoTask');
+          vscode.commands.executeCommand('unode.runDemoTask');
           break;
         case 'openDocumentation':
           void this.openDocumentation();

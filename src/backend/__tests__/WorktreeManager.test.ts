@@ -18,14 +18,14 @@ async function tempRepo(): Promise<string> {
 }
 
 describe('WorktreeManager (real git)', () => {
-  it('detects a git repo; clean ignores .roam/.vscode but counts untracked source + modified tracked', async () => {
+  it('detects a git repo; clean ignores .unode/.vscode but counts untracked source + modified tracked', async () => {
     const root = await tempRepo();
     const wm = new WorktreeManager(root);
     expect(await wm.isGitRepo()).toBe(true);
     expect(await wm.isClean()).toBe(true);
     // Roam/editor state dirs are untracked but don't affect a worktree → still clean.
-    await fs.mkdir(path.join(root, '.roam'), { recursive: true });
-    await fs.writeFile(path.join(root, '.roam', 'team.json'), '{}');
+    await fs.mkdir(path.join(root, '.unode'), { recursive: true });
+    await fs.writeFile(path.join(root, '.unode', 'team.json'), '{}');
     await fs.mkdir(path.join(root, '.vscode'), { recursive: true });
     await fs.writeFile(path.join(root, '.vscode', 'settings.json'), '{}');
     expect(await wm.isClean()).toBe(true);
@@ -39,14 +39,14 @@ describe('WorktreeManager (real git)', () => {
     await fs.rm(root, { recursive: true, force: true });
   });
 
-  it('creates a worktree under .roam/worktrees/, lists it, and removes it', async () => {
+  it('creates a worktree under .unode/worktrees/, lists it, and removes it', async () => {
     const root = await tempRepo();
     const wm = new WorktreeManager(root);
 
     const wt = await wm.create({ name: 'feature-x', agentId: 'a1' });
-    expect(wt.branch).toBe('roam/feature-x');
+    expect(wt.branch).toBe('unode/feature-x');
     expect(wt.agentId).toBe('a1');
-    expect(wt.path).toContain(path.join('.roam', 'worktrees', 'feature-x'));
+    expect(wt.path).toContain(path.join('.unode', 'worktrees', 'feature-x'));
     expect((await fs.stat(wt.path)).isDirectory()).toBe(true);
     expect((await fs.stat(path.join(wt.path, 'README.md'))).isFile()).toBe(true); // branched off HEAD
 
@@ -55,7 +55,7 @@ describe('WorktreeManager (real git)', () => {
 
     // .git/info/exclude got the worktrees dir
     const exclude = await fs.readFile(path.join(root, '.git', 'info', 'exclude'), 'utf8');
-    expect(exclude).toContain('.roam/worktrees/');
+    expect(exclude).toContain('.unode/worktrees/');
 
     await wm.remove(wt, { force: true });
     expect(list.length).toBeGreaterThanOrEqual(2); // main + feature-x existed before removal
@@ -65,10 +65,10 @@ describe('WorktreeManager (real git)', () => {
   it('pruneBranch deletes the branch on remove so the same name can be re-created (audit #1)', async () => {
     const root = await tempRepo();
     const wm = new WorktreeManager(root);
-    const branchList = () => spawnSync('git', ['branch', '--list', 'roam/feature-x'], { cwd: root, encoding: 'utf8' }).stdout ?? '';
+    const branchList = () => spawnSync('git', ['branch', '--list', 'unode/feature-x'], { cwd: root, encoding: 'utf8' }).stdout ?? '';
 
     const wt = await wm.create({ name: 'feature-x' });
-    expect(branchList()).toContain('roam/feature-x');
+    expect(branchList()).toContain('unode/feature-x');
 
     // Without pruning, the branch lingers and re-creating the same name fails on `worktree add -b`.
     await wm.remove(wt, { force: true, pruneBranch: true });
@@ -118,7 +118,7 @@ describe('WorktreeManager exclude path', () => {
       const wm = new WorktreeManager(root, git);
       await wm.create({ name: 'feature-x' });
       const exclude = await fs.readFile(path.join(common, 'info', 'exclude'), 'utf8');
-      expect(exclude).toContain('.roam/worktrees/');
+      expect(exclude).toContain('.unode/worktrees/');
       expect(calls.some((args) => args.join(' ') === 'rev-parse --git-common-dir')).toBe(true);
     } finally {
       await fs.rm(root, { recursive: true, force: true });
@@ -133,15 +133,15 @@ describe('parseWorktreeList', () => {
       'HEAD abc',
       'branch refs/heads/main',
       '',
-      'worktree /repo/.roam/worktrees/sunny-cloud',
+      'worktree /repo/.unode/worktrees/sunny-cloud',
       'HEAD def',
-      'branch refs/heads/roam/sunny-cloud',
+      'branch refs/heads/unode/sunny-cloud',
       '',
     ].join('\n');
     const list = parseWorktreeList(porcelain);
     expect(list).toEqual([
       { path: '/repo', branch: 'main' },
-      { path: '/repo/.roam/worktrees/sunny-cloud', branch: 'roam/sunny-cloud' },
+      { path: '/repo/.unode/worktrees/sunny-cloud', branch: 'unode/sunny-cloud' },
     ]);
   });
 });

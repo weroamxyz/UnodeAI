@@ -70,9 +70,9 @@ describe('worktree fan-out — end-to-end against real git', () => {
     // 2. The agent does work in its worktree.
     await fs.writeFile(path.join(wtPath!, 'feature.txt'), 'agent one work\n');
 
-    // 3. Turn completes → commit + merge into roam/integration.
+    // 3. Turn completes → commit + merge into unode/integration.
     await coord.onTurnComplete('dev1', false);
-    const inIntegration = show(root, 'roam/integration:feature.txt');
+    const inIntegration = show(root, 'unode/integration:feature.txt');
     expect(inIntegration.code).toBe(0);
     expect(inIntegration.out).toContain('agent one work');
     // Base is untouched until finalize.
@@ -103,8 +103,8 @@ describe('worktree fan-out — end-to-end against real git', () => {
     await coord.onTurnComplete('dev1', false);
     await coord.onTurnComplete('dev2', false);
 
-    expect(show(root, 'roam/integration:a.txt').out).toContain('from dev1');
-    expect(show(root, 'roam/integration:b.txt').out).toContain('from dev2');
+    expect(show(root, 'unode/integration:a.txt').out).toContain('from dev1');
+    expect(show(root, 'unode/integration:b.txt').out).toContain('from dev2');
 
     await fs.rm(root, { recursive: true, force: true });
   }, 30_000); // real-git: many spawns (init/worktree add/merge) — slow on Windows under parallel load
@@ -124,8 +124,8 @@ describe('worktree fan-out — end-to-end against real git', () => {
 
     expect(notifyAgent).toHaveBeenCalledWith('dev2', expect.stringContaining('shared.txt'));
     // Integration kept dev1's version and is not left in a conflicted state.
-    expect(show(root, 'roam/integration:shared.txt').out).toContain('dev1 version');
-    const intStatus = spawnSync('git', ['-C', path.join(root, '.roam', 'worktrees', '_integration'), 'status', '--porcelain'], { cwd: root, encoding: 'utf8' });
+    expect(show(root, 'unode/integration:shared.txt').out).toContain('dev1 version');
+    const intStatus = spawnSync('git', ['-C', path.join(root, '.unode', 'worktrees', '_integration'), 'status', '--porcelain'], { cwd: root, encoding: 'utf8' });
     expect((intStatus.stdout ?? '').trim()).toBe(''); // clean — merge was aborted
 
     await fs.rm(root, { recursive: true, force: true });
@@ -178,7 +178,7 @@ describe('verifier-as-gate — end-to-end against real git + a real command', ()
     // 1. Agent writes work that FAILS verification → held off integration, handed back.
     await fs.writeFile(path.join(wt!, 'feature.txt'), 'bad\n');
     await coord.onTurnComplete('dev1', false);
-    expect(show(root, 'roam/integration:feature.txt').code).not.toBe(0); // NOT on integration
+    expect(show(root, 'unode/integration:feature.txt').code).not.toBe(0); // NOT on integration
     expect(coord.verification('dev1')?.status).toBe('failed');
     expect(notifyAgent).toHaveBeenCalledWith('dev1', expect.stringContaining('checks'));
 
@@ -186,7 +186,7 @@ describe('verifier-as-gate — end-to-end against real git + a real command', ()
     await fs.writeFile(path.join(wt!, 'feature.txt'), 'good\n');
     await coord.onTurnComplete('dev1', false);
     expect(coord.verification('dev1')?.status).toBe('passed');
-    expect(show(root, 'roam/integration:feature.txt').out).toContain('good');
+    expect(show(root, 'unode/integration:feature.txt').out).toContain('good');
 
     await fs.rm(root, { recursive: true, force: true });
   }, 30_000);

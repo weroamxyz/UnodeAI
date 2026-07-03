@@ -2,7 +2,7 @@
  *  UnodeAi - WorktreeCoordinator (v0.6.x worktree fan-out, Slice B+C integration layer)
  *  Ties the primitives together for the live session: gives eligible agents their own git worktree
  *  (isolation), and on each turn completion commits + merges that worktree into the shared
- *  `roam/integration` branch (coordination), conflict-aware, with an opt-in auto-finalize to base.
+ *  `unode/integration` branch (coordination), conflict-aware, with an opt-in auto-finalize to base.
  *
  *  Pure orchestration over injected WorktreeManager + MergeOrchestrator (+ config/log/notify thunks),
  *  so it's unit-testable with fakes — no vscode coupling. The extension wires it to SessionManager's
@@ -17,11 +17,11 @@ import { VerifyResult } from './Verifier';
 export interface WorktreeCoordinatorDeps {
   manager: WorktreeManager;
   orchestrator: MergeOrchestrator;
-  /** roam.concurrencyStrategy === 'worktree'. */
+  /** unode.concurrencyStrategy === 'worktree'. */
   isEnabled: () => boolean;
-  /** roam.worktree.autoMerge — finalize integration → base automatically after a clean merge. */
+  /** unode.worktree.autoMerge — finalize integration → base automatically after a clean merge. */
   autoMerge: () => boolean;
-  /** roam.worktree.maxParallel — cap on simultaneous per-agent worktrees. */
+  /** unode.worktree.maxParallel — cap on simultaneous per-agent worktrees. */
   maxParallel: () => number;
   /** Eligible for isolation? Extension passes `!canDelegate(c) && role !== 'solo'` — the delegating
    *  PM and solo agents stay on the live shared tree. */
@@ -35,7 +35,7 @@ export interface WorktreeCoordinatorDeps {
   notifyAgent?: (agentId: string, message: string) => void;
   /** v0.7.0 verifier-as-gate: run the project's verify command in the agent's worktree BEFORE merging.
    *  Returns passed/failed/skipped. Absent = no gate (pre-0.7.0 behavior). The extension's impl honors
-   *  roam.worktree.verifyBeforeMerge + roam.verifyCommand and returns 'skipped' when gating is off, so
+   *  unode.worktree.verifyBeforeMerge + unode.verifyCommand and returns 'skipped' when gating is off, so
    *  the coordinator stays policy-free. On 'failed' the work is held on its own branch (not merged) and
    *  the failure is handed back to the agent; 'skipped'/'passed' fall through to the merge. */
   verify?: (cwd: string) => Promise<VerifyResult>;
@@ -92,7 +92,7 @@ export class WorktreeCoordinator {
         }
         return undefined;
       }
-      const branch = `roam/${worktreeName(config)}`;
+      const branch = `unode/${worktreeName(config)}`;
       // Adopt an existing worktree on this branch (survives an extension reload mid-run).
       const existing = (await this.deps.manager.list()).find((w) => w.branch === branch);
       if (existing) {
@@ -147,8 +147,8 @@ export class WorktreeCoordinator {
           this.deps.notifyAgent?.(
             wt.agentId,
             `Your work can't merge yet: the verification command \`${verification.command}\` isn't approved ` +
-            `to run, so the gate can't confirm it. Ask the user to add it to roam.allowedCommands (or adjust ` +
-            `roam.commandApproval). Your work is safe on your own branch until verification can run.`
+            `to run, so the gate can't confirm it. Ask the user to add it to unode.allowedCommands (or adjust ` +
+            `unode.commandApproval). Your work is safe on your own branch until verification can run.`
           );
           return; // held out of integration until verification can actually run
         }
@@ -240,7 +240,7 @@ export class WorktreeCoordinator {
     this.worktrees.delete(agentId);
     this.verifyStatus.delete(agentId);
     try {
-      // pruneBranch: also delete the agent's roam/<name> branch. Its work is already on integration by
+      // pruneBranch: also delete the agent's unode/<name> branch. Its work is already on integration by
       // now (we awaited the merge above), so removing the branch is safe and stops a later same-id
       // agent from failing on `git worktree add -b` ("branch already exists"). (Audit #1.)
       await this.deps.manager.remove(wt, { force: true, pruneBranch: true });

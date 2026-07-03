@@ -4,6 +4,37 @@ All notable changes to UnodeAi are documented here.
 
 ## [Unreleased]
 
+## [0.9.15] — 2026-07-03 · Workspace Trust + opt-in network
+
+- **Workspace Trust support (`capabilities.untrustedWorkspaces: limited`).** In an untrusted workspace,
+  UnodeAi runs read-only: agents can chat, plan, read, and search, but **shell commands, MCP servers, and
+  the verify command are disabled** until you trust the workspace. Enforced at every execution chokepoint
+  (OpenAI-compat `run_command`, the Claude `--permission-prompt-tool` gate, the verify runner, and MCP
+  mount) and checked live, so granting trust mid-session takes effect immediately and re-mounts MCP servers.
+  Security-sensitive settings (`unode.allowedCommands`, `commandApproval`, `verifyCommand`, `baseUrl`, …)
+  are marked `restrictedConfigurations`, so a repo can't inject them. Virtual workspaces are declared
+  unsupported (the extension needs a real filesystem + git).
+- **No network by default.** The hosted-marketplace-catalog fetch (`unode.marketplace.fetchCatalog`) now
+  defaults to **off** — the bundled catalog works offline and nothing is fetched from the internet unless
+  you opt in. Model/pricing lookups still occur only against the provider gateway you configure with a key.
+
+## [0.9.14] — 2026-07-03 · Rename Roam Crew → UnodeAi (namespace, icons, data dir)
+
+- **Full rebrand from Roam Crew to UnodeAi.** Every globally-scoped contribution id was moved out of the
+  legacy `roam.*` namespace so the extension no longer collides with an installed Roam Crew: view
+  containers (`roam`/`roamPanel` → `unode`/`unodePanel`), all commands (`roam.*` → `unode.*`), the chat
+  participant (`@roam` → `@unode`, `roam.crew` → `unode.crew`), context keys, and every setting
+  (`roam.*` → `unode.*`). The activity-bar, editor-title, and Team-view icons now use the Unode logomark.
+- **Your settings carry over automatically.** On first activation any values you set under `roam.*` are
+  copied to the matching `unode.*` key (a one-time, best-effort migration; existing `unode.*` values win).
+- **Workspace data dir `.roam/` → `.unode/`.** Team roster (`team.json`), project/shared memory
+  (`rules.md`, `memory/`), MCP config, and worktrees now live under `.unode/`; an existing `.roam/` is
+  renamed on activation and any git worktrees repaired. The worktree integration branch is now
+  `unode/integration`.
+- **Unchanged on purpose:** the **Roam (weroam) gateway provider** — provider id `roam`, `ROAM_API_KEY`,
+  and `https://ai.weroam.xyz` — is a distinct backend from the separate Unode gateway and is left intact,
+  so your agents keep hitting the same gateway with the same key.
+
 ## [0.9.8] — 2026-06-22 · Account balance for every gateway provider (not just Roam)
 
 ### Fixed / Added

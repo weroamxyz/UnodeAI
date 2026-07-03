@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
  *  UnodeAi - RulesFile (v0.1.1 F4 — Session Memory)
- *  A project-level memory file at `<workspaceRoot>/.roam/rules.md` (à la .clinerules). Its contents
+ *  A project-level memory file at `<workspaceRoot>/.unode/rules.md` (à la .clinerules). Its contents
  *  are appended to every agent's system prompt at start, wrapped in <project_context> tags, so all
  *  sessions share the same architecture decisions / conventions / active context.
  *
@@ -29,7 +29,7 @@ export class RulesFile {
     private mkdir: DirCreator = defaultMkdir
   ) {}
 
-  /** Absolute path of the rules file (`.roam/rules.md`). */
+  /** Absolute path of the rules file (`.unode/rules.md`). */
   get path(): string {
     return this.filePath;
   }
@@ -65,9 +65,9 @@ export class RulesFile {
   }
 }
 
-/** Build the `.roam/rules.md` path under a workspace root. */
+/** Build the `.unode/rules.md` path under a workspace root. */
 export function rulesFilePath(workspaceRoot: string): string {
-  return path.join(workspaceRoot, '.roam', 'rules.md');
+  return path.join(workspaceRoot, '.unode', 'rules.md');
 }
 
 /**

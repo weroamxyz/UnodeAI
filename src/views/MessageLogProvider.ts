@@ -19,7 +19,7 @@ export type NameResolver = (id: string) => string;
 type FeedItem = MessageLogItem;
 
 export class MessageLogProvider implements vscode.WebviewViewProvider {
-  public static readonly viewType = 'roam.messageLog';
+  public static readonly viewType = 'unode.messageLog';
   private _views = new Set<vscode.WebviewView>();
   private items: FeedItem[] = [];
   private delegations: DelegationProgressSummary[] = [];

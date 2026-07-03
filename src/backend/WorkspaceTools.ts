@@ -156,7 +156,7 @@ export type CommandExecutor = (command: string, opts: { cwd: string; timeoutMs: 
 export type CheckpointRecorder = (entry: { agentId: string; path: string; before: string | null; after: string }) => void;
 
 /**
- * V2 Write approval: asked before a file write is committed when roam.writeApproval is 'ask'. The user
+ * V2 Write approval: asked before a file write is committed when unode.writeApproval is 'ask'. The user
  * previews the change (diff) and decides. 'deny' blocks the write; 'once'/'always' allow it (the
  * 'always' session-latch is the approver's job, symmetric with CommandApprover).
  */
@@ -223,14 +223,14 @@ export class WorkspaceTools {
     // V1 Checkpoints: optional sink for write before/after content (restore points). No-op if absent.
     private checkpointRecorder?: CheckpointRecorder,
     // V2 Write approval: read LIVE per write (a thunk, not a captured string) so toggling
-    // roam.writeApproval applies to already-running agents without a restart. true => prompt first.
+    // unode.writeApproval applies to already-running agents without a restart. true => prompt first.
     private writeApprovalAsk: () => boolean = () => false,
     private requestWriteApproval?: WriteApprover,
     private memoryWriter?: MemoryWriter,
     // G-003c: notified when a tool path is rejected for being outside the sandbox root, so the host can
     // offer (in context) to move the agent's working folder there instead of leaving it stuck.
     private onOutsideRoot?: (attemptedPath: string) => void,
-    // Worktree fan-out: a READ-ONLY overlay root (the roam/integration worktree). read_file/list_dir
+    // Worktree fan-out: a READ-ONLY overlay root (the unode/integration worktree). read_file/list_dir
     // fall back to it for paths not present in the agent's own worktree, so every agent can READ the
     // team's merged work while WRITES stay isolated to its own root. Undefined = no overlay.
     private sharedReadRoot?: string,
@@ -315,7 +315,7 @@ export class WorkspaceTools {
     // C3: real-time Todo list — offered to any agent that actually does work (has ≥1 capability), a
     // pure planning signal with no side effects. A zero-permission pure-chat agent advertises nothing.
     specs.push(
-      fn('memory_note', 'Record a short note to the team\'s SHARED memory (.roam/memory/notes.md) so other agents and future sessions see it. Use for decisions made, gotchas/pitfalls discovered, interface contracts, or who-owns-what. Keep it one line.', {
+      fn('memory_note', 'Record a short note to the team\'s SHARED memory (.unode/memory/notes.md) so other agents and future sessions see it. Use for decisions made, gotchas/pitfalls discovered, interface contracts, or who-owns-what. Keep it one line.', {
         note: { type: 'string', description: 'A short one-line note for shared team memory.' },
       }, ['note'])
     );
@@ -752,7 +752,7 @@ export class WorkspaceTools {
     } catch {
       return `Error: "${subdir}" is outside the working folder.`;
     }
-    const IGNORE = new Set(['node_modules', '.git', 'out', 'out-e2e', 'dist', 'build', '.vscode-test', 'coverage', '.roam', '.npm-cache', '.worktrees']);
+    const IGNORE = new Set(['node_modules', '.git', 'out', 'out-e2e', 'dist', 'build', '.vscode-test', 'coverage', '.unode', '.npm-cache', '.worktrees']);
     const results: string[] = [];
     let filesScanned = 0;
     const walk = async (dir: string): Promise<void> => {

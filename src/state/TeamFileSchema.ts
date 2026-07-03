@@ -9,7 +9,7 @@ export interface TeamFileDocument {
 
 export class TeamFileValidationError extends Error {
   constructor(public readonly issues: string[]) {
-    super(`Invalid .roam/team.json: ${issues.slice(0, 5).join('; ')}`);
+    super(`Invalid .unode/team.json: ${issues.slice(0, 5).join('; ')}`);
   }
 }
 

@@ -31,7 +31,7 @@ export async function promptCommandApproval(currentMode: CommandApprovalMode): P
     return false;
   }
 
-  const cfg = vscode.workspace.getConfiguration('roam');
+  const cfg = vscode.workspace.getConfiguration('unode');
   // 'ask' mode: safe prefixes run silently; novel commands prompt (Run / Always allow / Deny).
   await cfg.update('commandApproval', 'ask', vscode.ConfigurationTarget.Workspace);
   await cfg.update('allowedCommands', SAFE_COMMAND_PREFIXES, vscode.ConfigurationTarget.Workspace);
@@ -47,7 +47,7 @@ export function showBlockedWarning(): void {
     )
     .then((selection) => {
       if (selection === 'Enable Commands') {
-        vscode.commands.executeCommand('roam.enableCommands');
+        vscode.commands.executeCommand('unode.enableCommands');
       }
     });
 }

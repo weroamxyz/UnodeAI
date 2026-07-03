@@ -63,12 +63,12 @@ describe('WorktreePanel review board', () => {
   it('renders failed lanes as held off integration with escaped expandable output', () => {
     const review: WorktreeReview = {
       base: 'main',
-      integrationBranch: 'roam/integration',
+      integrationBranch: 'unode/integration',
       hasIntegration: false,
       lanes: [{
         agentId: 'dev-1',
         agent: 'Developer',
-        branch: 'roam/dev',
+        branch: 'unode/dev',
         path: 'C:/repo/.worktrees/dev',
         verification: {
           status: 'failed',
@@ -94,20 +94,20 @@ describe('WorktreePanel review board', () => {
   it('makes passed and unverified lane verification states prominent', () => {
     const review: WorktreeReview = {
       base: 'main',
-      integrationBranch: 'roam/integration',
+      integrationBranch: 'unode/integration',
       hasIntegration: true,
       lanes: [
         {
           agentId: 'reviewer-1',
           agent: 'Reviewer',
-          branch: 'roam/reviewer',
+          branch: 'unode/reviewer',
           path: 'C:/repo/.worktrees/reviewer',
           verification: { status: 'passed', command: 'npm test', output: 'ok' },
         },
         {
           agentId: 'designer-1',
           agent: 'Designer',
-          branch: 'roam/designer',
+          branch: 'unode/designer',
           path: 'C:/repo/.worktrees/designer',
         },
       ],
@@ -126,12 +126,12 @@ describe('WorktreePanel review board', () => {
   it('flags a passing lane that modified tests as review-needed (anti-cheat)', () => {
     const review: WorktreeReview = {
       base: 'main',
-      integrationBranch: 'roam/integration',
+      integrationBranch: 'unode/integration',
       hasIntegration: true,
       lanes: [{
         agentId: 'dev-1',
         agent: 'Developer',
-        branch: 'roam/dev',
+        branch: 'unode/dev',
         path: 'C:/repo/.worktrees/dev',
         verification: { status: 'passed', command: 'npm test', output: 'ok', touchedTests: ['test/math.test.js'] },
       }],
@@ -150,12 +150,12 @@ describe('WorktreePanel review board', () => {
   it('renders changed files and lane action emitters with escaped file labels', () => {
     const review: WorktreeReview = {
       base: 'main',
-      integrationBranch: 'roam/integration',
+      integrationBranch: 'unode/integration',
       hasIntegration: false,
       lanes: [{
         agentId: 'dev-1',
         agent: 'Developer',
-        branch: 'roam/dev',
+        branch: 'unode/dev',
         path: 'C:/repo/.worktrees/dev',
         changedFiles: ['src/app.ts', 'src/<unsafe>.ts'],
         verification: { status: 'failed', command: 'npm test', output: 'nope' },
@@ -183,7 +183,7 @@ describe('WorktreePanel review board', () => {
     const actions: unknown[] = [];
     WorktreePanel.createOrShow(
       {} as never,
-      async () => ({ base: 'main', integrationBranch: 'roam/integration', hasIntegration: false, lanes: [], integrationFiles: [] }),
+      async () => ({ base: 'main', integrationBranch: 'unode/integration', hasIntegration: false, lanes: [], integrationFiles: [] }),
       async () => ({ ok: true, message: 'done' }),
       (action) => { actions.push(action); }
     );
@@ -210,11 +210,11 @@ describe('WorktreePanel review board', () => {
       {} as never,
       async () => ({
         base: 'main',
-        integrationBranch: 'roam/integration',
+        integrationBranch: 'unode/integration',
         hasIntegration: false,
         lanes: [
-          { agentId: 'dev-a', agent: 'Developer', branch: 'roam/dev-a', path: 'C:/repo/.worktrees/dev-a' },
-          { agentId: 'dev-b', agent: 'Developer', branch: 'roam/dev-b', path: 'C:/repo/.worktrees/dev-b' },
+          { agentId: 'dev-a', agent: 'Developer', branch: 'unode/dev-a', path: 'C:/repo/.worktrees/dev-a' },
+          { agentId: 'dev-b', agent: 'Developer', branch: 'unode/dev-b', path: 'C:/repo/.worktrees/dev-b' },
         ],
         integrationFiles: [],
       }),
@@ -238,9 +238,9 @@ describe('WorktreePanel review board', () => {
       {} as never,
       async () => ({
         base: 'main',
-        integrationBranch: 'roam/integration',
+        integrationBranch: 'unode/integration',
         hasIntegration: false,
-        lanes: [{ agentId: 'dev-1', agent: 'Developer', branch: 'roam/dev', path: 'C:/repo/.worktrees/dev' }],
+        lanes: [{ agentId: 'dev-1', agent: 'Developer', branch: 'unode/dev', path: 'C:/repo/.worktrees/dev' }],
         integrationFiles: [],
       }),
       async () => ({ ok: true, message: 'done' })
@@ -251,9 +251,9 @@ describe('WorktreePanel review board', () => {
 
     WorktreePanel.current!.update({
       base: 'main',
-      integrationBranch: 'roam/integration',
+      integrationBranch: 'unode/integration',
       hasIntegration: true,
-      lanes: [{ agentId: 'reviewer-1', agent: 'Reviewer', branch: 'roam/reviewer', path: 'C:/repo/.worktrees/reviewer', changedFiles: ['src/review.ts'] }],
+      lanes: [{ agentId: 'reviewer-1', agent: 'Reviewer', branch: 'unode/reviewer', path: 'C:/repo/.worktrees/reviewer', changedFiles: ['src/review.ts'] }],
       integrationFiles: ['src/review.ts'],
     });
 

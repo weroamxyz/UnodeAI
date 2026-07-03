@@ -64,12 +64,12 @@ describe('CommandPolicy', () => {
 
     // Codex review: the new-install default (package.json) and "Enable Safe Commands" (SAFE_COMMAND_TEMPLATES)
     // must stay identical, or users get a different policy depending on how they enabled commands.
-    it('package.json roam.allowedCommands default matches SAFE_COMMAND_TEMPLATES (no drift)', () => {
+    it('package.json unode.allowedCommands default matches SAFE_COMMAND_TEMPLATES (no drift)', () => {
       const pkg = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8'));
       const sections = Array.isArray(pkg.contributes.configuration) ? pkg.contributes.configuration : [pkg.contributes.configuration];
       let def: string[] | undefined;
       for (const s of sections) {
-        if (s?.properties?.['roam.allowedCommands']) { def = s.properties['roam.allowedCommands'].default; }
+        if (s?.properties?.['unode.allowedCommands']) { def = s.properties['unode.allowedCommands'].default; }
       }
       expect(def).toBeDefined();
       expect(new Set(def)).toEqual(new Set(SAFE_COMMAND_TEMPLATES));
@@ -188,12 +188,12 @@ describe('CommandPolicy', () => {
     });
 
     // The live-policy-staleness bug: an "Allow for project" had added `npm install`; emptying
-    // roam.allowedCommands must re-gate it (so `npm install left-pad` asks again, not runs silently).
+    // unode.allowedCommands must re-gate it (so `npm install left-pad` asks again, not runs silently).
     it('re-gates a previously-allowlisted command after the allowlist is emptied (ask mode)', () => {
       const p = new CommandPolicy('ask', ['npm install']);
       expect(p.check('npm install left-pad').allowed).toBe(true); // matched the allowlist → silent
 
-      p.reload('ask', []); // user emptied roam.allowedCommands
+      p.reload('ask', []); // user emptied unode.allowedCommands
       const verdict = p.check('npm install left-pad');
       expect(verdict.allowed).toBe(false);
       expect(verdict.ask).toBe(true); // now prompts again

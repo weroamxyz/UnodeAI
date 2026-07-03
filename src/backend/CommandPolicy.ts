@@ -56,7 +56,7 @@ const CATASTROPHIC: RegExp[] = [
  * 'ask' prompt. Anything not listed here prompts the user (Run once / Always allow / Deny).
  */
 // SINGLE SOURCE OF TRUTH for the safe default command set. Both the new-install default
-// (package.json → roam.allowedCommands) and the "Enable Safe Commands" action seed from this, so the two
+// (package.json → unode.allowedCommands) and the "Enable Safe Commands" action seed from this, so the two
 // can't drift (a test asserts package.json matches this list). Read-only / verify / lint / build only —
 // never bare tools ('git'/'node'/'npm' would allow 'git reset --hard'/'node evil.js'/'npm publish'); and
 // never prefix footguns like 'git branch' (matches 'git branch -D x'). Anything else hits the 'ask' prompt.
@@ -161,7 +161,7 @@ export class CommandPolicy {
         }
         return {
           allowed: false,
-          reason: 'command execution is disabled. The user can enable it via "roam.commandApproval".',
+          reason: 'command execution is disabled. The user can enable it via "unode.commandApproval".',
         };
       }
 

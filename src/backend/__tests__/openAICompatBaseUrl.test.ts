@@ -19,7 +19,7 @@ describe('resolveOpenAICompatBaseUrl', () => {
     expect(resolveOpenAICompatBaseUrl('roam', ' https://gateway.example/v1/ ')).toBe('https://gateway.example/v1');
   });
 
-  // Codex blocking fix: a persisted roam.baseUrl=unode (passed as roamDefault) must NOT leak Roam onto Unode.
+  // Codex blocking fix: a persisted unode.baseUrl=unode (passed as roamDefault) must NOT leak Roam onto Unode.
   it('never lets a stale unode/OpenAI roamDefault send a Roam agent to Unode', () => {
     expect(resolveOpenAICompatBaseUrl('roam', undefined, undefined, 'https://www.unodetech.xyz/v1')).toBe('https://ai.weroam.xyz/v1');
     expect(resolveOpenAICompatBaseUrl('roam', undefined, undefined, 'https://api.openai.com/v1')).toBe('https://ai.weroam.xyz/v1');
@@ -35,7 +35,7 @@ describe('resolveOpenAICompatBaseUrl', () => {
     expect(canonicalRoamBaseUrl(' https://gw.example/v1/ ')).toBe('https://gw.example/v1');
   });
 
-  it('uses a provided unodeDefault for Unode agents (roam.unodeBaseUrl wiring)', () => {
+  it('uses a provided unodeDefault for Unode agents (unode.unodeBaseUrl wiring)', () => {
     expect(resolveOpenAICompatBaseUrl('unode', undefined, undefined, 'https://ai.weroam.xyz/v1', 'https://gw.unodetech.xyz/v1')).toBe('https://gw.unodetech.xyz/v1');
   });
 

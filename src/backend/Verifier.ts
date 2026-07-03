@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
  *  UnodeAi - Verifier (v0.7.0 verifier-as-gate)
- *  Runs the project's own verification (build / type-check / test, via `roam.verifyCommand`) in a
+ *  Runs the project's own verification (build / type-check / test, via `unode.verifyCommand`) in a
  *  given directory and reports pass / fail. This is the engine behind making verification a
  *  COMPLETION/MERGE condition rather than a nudge: the WorktreeCoordinator runs it in a worker's
  *  worktree before merging, so a crew only lands work that passes your project's checks.
@@ -29,7 +29,7 @@ export interface VerifyResult {
 const MAX_OUTPUT = 8000;
 
 export interface VerifierOptions {
-  /** Read LIVE (thunk) so toggling `roam.verifyCommand` applies without a restart. */
+  /** Read LIVE (thunk) so toggling `unode.verifyCommand` applies without a restart. */
   command: () => string;
   /** How the command runs (spawn in `cwd`). Injected so tests need no real build. */
   run: CommandRunner;
@@ -50,17 +50,17 @@ export class Verifier {
   async verify(cwd: string): Promise<VerifyResult> {
     const command = (this.opts.command() || '').trim();
     if (!command) {
-      return { status: 'skipped', command: '', output: 'No verify command configured (set roam.verifyCommand, e.g. "npm test" or "npx tsc --noEmit").' };
+      return { status: 'skipped', command: '', output: 'No verify command configured (set unode.verifyCommand, e.g. "npm test" or "npx tsc --noEmit").' };
     }
     const verdict = this.opts.commandPolicy?.check(command);
     if (verdict && !verdict.allowed) {
       // The gate runs unattended (mid-merge), so it can't surface an approval prompt — and it must NOT
-      // silently auto-run a command the user hasn't approved (a workspace-set roam.verifyCommand could
+      // silently auto-run a command the user hasn't approved (a workspace-set unode.verifyCommand could
       // be hostile). Consistent with run_checks (blocks when not allowed): skip and tell the user how
       // to enable it. Common build/test commands are in the default allowlist, so they still run.
       const output = verdict.ask
-        ? `Verify command "${command}" needs approval and the gate can't prompt during a merge. Add it to roam.allowedCommands (or adjust roam.commandApproval) to gate on it.`
-        : `Verify command blocked by roam.commandApproval: ${verdict.reason ?? 'not allowed'}`;
+        ? `Verify command "${command}" needs approval and the gate can't prompt during a merge. Add it to unode.allowedCommands (or adjust unode.commandApproval) to gate on it.`
+        : `Verify command blocked by unode.commandApproval: ${verdict.reason ?? 'not allowed'}`;
       return { status: 'skipped', command, output, blocked: true };
     }
     const { code, output } = await this.opts.run(command, cwd);

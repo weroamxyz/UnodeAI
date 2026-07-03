@@ -339,7 +339,7 @@ export class TeamTools {
    */
   private async runChecks(): Promise<string> {
     if (!this.verifyCommand.trim()) {
-      return 'No verification command configured. Ask the user to set "roam.verifyCommand" (e.g. "npm run build" or "npx tsc --noEmit").';
+      return 'No verification command configured. Ask the user to set "unode.verifyCommand" (e.g. "npm run build" or "npx tsc --noEmit").';
     }
     const verdict = this.commandPolicy?.check(this.verifyCommand);
     if (verdict && !verdict.allowed) {
@@ -356,7 +356,7 @@ export class TeamTools {
       } else {
         // Surface to the user too — otherwise the block is silent (only the LLM sees this string). B2.
         this.onCommandBlocked?.(verdict.reason ?? 'command execution is disabled');
-        return `Verification command blocked by roam.commandApproval: ${verdict.reason}`;
+        return `Verification command blocked by unode.commandApproval: ${verdict.reason}`;
       }
     }
     const { code, output } = await this.runCommand(this.verifyCommand, this.cwd);

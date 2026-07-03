@@ -288,9 +288,9 @@ export class OnboardingWizard {
         <h2>You're all set!</h2>
         <p class="lead">Open your preferred workspace view or finish setup.</p>
         <div class="grid">
-          <button class="card" data-open-command="roam.showDashboard" type="button"><div class="card-title">Dashboard</div><p class="card-text">See activity and team status.</p></button>
-          <button class="card" data-open-command="roam.openChat" type="button"><div class="card-title">Chat</div><p class="card-text">Talk to a selected agent.</p></button>
-          <button class="card" data-open-command="roam.openSettings" type="button"><div class="card-title">Settings</div><p class="card-text">Manage keys, models, and MCP.</p></button>
+          <button class="card" data-open-command="unode.showDashboard" type="button"><div class="card-title">Dashboard</div><p class="card-text">See activity and team status.</p></button>
+          <button class="card" data-open-command="unode.openChat" type="button"><div class="card-title">Chat</div><p class="card-text">Talk to a selected agent.</p></button>
+          <button class="card" data-open-command="unode.openSettings" type="button"><div class="card-title">Settings</div><p class="card-text">Manage keys, models, and MCP.</p></button>
         </div>
         <button class="primary" data-action="finish" style="margin-top:14px">Finish</button>
       </section>
@@ -441,7 +441,7 @@ export class OnboardingWizard {
 }
 
 function allowedWizardCommand(command: string): boolean {
-  return command === 'roam.showDashboard' || command === 'roam.openChat' || command === 'roam.openSettings';
+  return command === 'unode.showDashboard' || command === 'unode.openChat' || command === 'unode.openSettings';
 }
 
 function safeJson(value: unknown): string {

@@ -31,7 +31,7 @@ export interface FileDiagnostic {
  */
 export type DiagnosticsCollector = (paths: string[]) => Promise<FileDiagnostic[]>;
 
-/** Engine knobs threaded into the backend (each gated by a `roam.engine.*` kill-switch upstream). */
+/** Engine knobs threaded into the backend (each gated by a `unode.engine.*` kill-switch upstream). */
 export interface EngineOptions {
   /** Post-write diagnostics injection. Omitted/undefined = disabled. */
   diagnostics?: DiagnosticsCollector;
@@ -46,7 +46,7 @@ export interface EngineOptions {
   /** Called when a tool path is rejected for being outside the workspace root (G-003c), so the host can
    *  offer to move the agent's working folder there. Receives the attempted absolute path. */
   onOutsideRoot?: (attemptedPath: string) => void;
-  /** Worktree fan-out: a READ-ONLY overlay root (the `roam/integration` worktree) the agent can read
+  /** Worktree fan-out: a READ-ONLY overlay root (the `unode/integration` worktree) the agent can read
    *  the team's merged work from when a file isn't in its own isolated worktree. Writes always stay in
    *  the agent's own root. Undefined = no overlay (normal single-tree behavior). */
   sharedReadRoot?: string;

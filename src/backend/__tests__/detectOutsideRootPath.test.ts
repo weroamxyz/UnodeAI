@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import * as path from 'path';
 import { detectOutsideRootPath } from '../WorkspaceTools';
 
-const ROOT = process.platform === 'win32' ? 'C:\\AI_Program\\RoamCrew' : '/work/roam';
+const ROOT = process.platform === 'win32' ? 'C:\\AI_Program\\Unode' : '/work/roam';
 const outsideDrive = process.platform === 'win32' ? 'C:\\AI_Program\\ux-scratch\\src\\mathUtils.js' : '/other/ux-scratch/src/mathUtils.js';
 
 describe('detectOutsideRootPath', () => {
@@ -37,7 +37,7 @@ describe('detectOutsideRootPath', () => {
   });
 
   it('does not flag the working root itself written in prose with trailing punctuation', () => {
-    expect(detectOutsideRootPath(`Work in the RoamCrew repo (${ROOT}).`, ROOT)).toBeUndefined();
+    expect(detectOutsideRootPath(`Work in the Unode repo (${ROOT}).`, ROOT)).toBeUndefined();
     expect(detectOutsideRootPath(`cd ${ROOT}, then build`, ROOT)).toBeUndefined();
   });
 

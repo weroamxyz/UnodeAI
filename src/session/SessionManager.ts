@@ -120,11 +120,11 @@ export interface SessionManagerDeps {
   resolveTaskModel?: (config: AgentConfig, msg: Message) => string | undefined;
   /** Smart Mode (F2/F3): optional tier-level params for the selected task tier. */
   resolveTaskModelParams?: (config: AgentConfig, msg: Message) => AgentModelParams | undefined;
-  /** Session Memory (F4): current `.roam/rules.md` content to append to each agent's system prompt
+  /** Session Memory (F4): current `.unode/rules.md` content to append to each agent's system prompt
    *  at start (wrapped in <project_context>). Empty/undefined = no project memory. */
   getProjectContext?: () => string;
   /** Optional host-side workspace context gatherer (opt-in): returns a formatted string to attach to turns.
-   *  Provided by the extension wiring when `roam.engine.workspaceContext` is enabled. */
+   *  Provided by the extension wiring when `unode.engine.workspaceContext` is enabled. */
   /** @param root the agent's runtime working directory (worktree/workspace) so an isolated worker is
    *  grounded to its ACTUAL tool root, not the global workspace. */
   getWorkspaceContext?: (root?: string) => Promise<string | undefined> | string | undefined;
@@ -272,7 +272,7 @@ export class SessionManager {
     info.startedAt = new Date().toISOString();
     this.fire('session.status', info.id, 'status_change', { status: info.status });
 
-    // F4: append project memory (.roam/rules.md) to the system prompt. Use a derived copy so we never
+    // F4: append project memory (.unode/rules.md) to the system prompt. Use a derived copy so we never
     // mutate the stored config — a later restart re-derives with whatever the rules file says then.
     const runConfig = this.withProjectContext(info.config);
     // Worktree fan-out (v0.6.x): isolate this agent in its own git worktree by rooting it there.

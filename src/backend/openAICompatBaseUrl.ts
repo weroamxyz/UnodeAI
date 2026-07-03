@@ -16,7 +16,7 @@ export function resolveOpenAICompatBaseUrl(
     // Roam agents must use the Roam (weroam) gateway. A persisted OpenAI default would send Roam keys to
     // api.openai.com (401), and a persisted unode URL would send them to Unode — ignore both on a roam agent.
     const candidate = configured && !isOpenAIBaseUrl(configured) && !isUnodeBaseUrl(configured) ? configured : roamDefault;
-    // Defense in depth: roamDefault is the roam.baseUrl SETTING, which an existing workspace may have
+    // Defense in depth: roamDefault is the unode.baseUrl SETTING, which an existing workspace may have
     // persisted to the OLD unode default. Roam must NEVER resolve to unode/OpenAI — fall back to weroam.
     return stripTrailingSlash(isUnodeBaseUrl(candidate) || isOpenAIBaseUrl(candidate) ? ROAM_DEFAULT_BASE_URL : candidate);
   }
@@ -27,9 +27,9 @@ export function resolveOpenAICompatBaseUrl(
   return stripTrailingSlash(configured || clean(envBaseUrl) || OPENAI_COMPAT_DEFAULT_BASE_URL);
 }
 
-/** The Roam (weroam) base URL to use given a configured roam.baseUrl — never the unode/OpenAI endpoint.
+/** The Roam (weroam) base URL to use given a configured unode.baseUrl — never the unode/OpenAI endpoint.
  *  A blank or stale-unode/OpenAI setting collapses to the canonical weroam gateway. Use this at every site
- *  that reads roam.baseUrl as the Roam endpoint (resolution default + pricing), so the Roam key can't leak. */
+ *  that reads unode.baseUrl as the Roam endpoint (resolution default + pricing), so the Roam key can't leak. */
 export function canonicalRoamBaseUrl(configured?: string): string {
   const c = clean(configured);
   return stripTrailingSlash(c && !isOpenAIBaseUrl(c) && !isUnodeBaseUrl(c) ? c : ROAM_DEFAULT_BASE_URL);

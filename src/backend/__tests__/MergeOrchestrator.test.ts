@@ -39,8 +39,8 @@ describe('GitMergeOrchestrator', () => {
     try {
       const wm = new WorktreeManager(root);
       const orchestrator = new GitMergeOrchestrator(root);
-      const a = await wm.create({ name: 'agent-a', branch: 'roam/agent-a' });
-      const b = await wm.create({ name: 'agent-b', branch: 'roam/agent-b' });
+      const a = await wm.create({ name: 'agent-a', branch: 'unode/agent-a' });
+      const b = await wm.create({ name: 'agent-b', branch: 'unode/agent-b' });
 
       await fs.writeFile(path.join(a.path, 'a.txt'), 'from a\n');
       await fs.writeFile(path.join(b.path, 'b.txt'), 'from b\n');
@@ -51,7 +51,7 @@ describe('GitMergeOrchestrator', () => {
       expect((await orchestrator.mergeToIntegration(a)).status).toBe('merged');
       expect((await orchestrator.mergeToIntegration(b)).status).toBe('merged');
 
-      const integration = path.join(root, '.roam', 'worktrees', '_integration');
+      const integration = path.join(root, '.unode', 'worktrees', '_integration');
       await expect(readLf(path.join(integration, 'a.txt'))).resolves.toBe('from a\n');
       await expect(readLf(path.join(integration, 'b.txt'))).resolves.toBe('from b\n');
     } finally {
@@ -64,8 +64,8 @@ describe('GitMergeOrchestrator', () => {
     try {
       const wm = new WorktreeManager(root);
       const orchestrator = new GitMergeOrchestrator(root);
-      const a = await wm.create({ name: 'agent-a', branch: 'roam/conflict-a' });
-      const b = await wm.create({ name: 'agent-b', branch: 'roam/conflict-b' });
+      const a = await wm.create({ name: 'agent-a', branch: 'unode/conflict-a' });
+      const b = await wm.create({ name: 'agent-b', branch: 'unode/conflict-b' });
 
       await fs.writeFile(path.join(a.path, 'README.md'), 'from a\n');
       await fs.writeFile(path.join(b.path, 'README.md'), 'from b\n');
@@ -78,7 +78,7 @@ describe('GitMergeOrchestrator', () => {
       expect(result.status).toBe('conflict');
       expect(result.conflictedFiles).toContain('README.md');
 
-      const integration = path.join(root, '.roam', 'worktrees', '_integration');
+      const integration = path.join(root, '.unode', 'worktrees', '_integration');
       expect(gitStatus(integration)).toBe('');
       await expect(readLf(path.join(integration, 'README.md'))).resolves.toBe('from a\n');
     } finally {
@@ -91,7 +91,7 @@ describe('GitMergeOrchestrator', () => {
     try {
       const wm = new WorktreeManager(root);
       const orchestrator = new GitMergeOrchestrator(root);
-      const wt = await wm.create({ name: 'clean-agent', branch: 'roam/clean-agent' });
+      const wt = await wm.create({ name: 'clean-agent', branch: 'unode/clean-agent' });
 
       await expect(orchestrator.commitWorktree(wt, 'clean')).resolves.toBe(false);
     } finally {
@@ -104,7 +104,7 @@ describe('GitMergeOrchestrator', () => {
     try {
       const wm = new WorktreeManager(root);
       const orchestrator = new GitMergeOrchestrator(root);
-      const wt = await wm.create({ name: 'empty-agent', branch: 'roam/empty-agent' });
+      const wt = await wm.create({ name: 'empty-agent', branch: 'unode/empty-agent' });
 
       const result = await orchestrator.mergeToIntegration(wt);
       expect(result.status).toBe('nothing');
@@ -118,7 +118,7 @@ describe('GitMergeOrchestrator', () => {
     try {
       const wm = new WorktreeManager(root);
       const orchestrator = new GitMergeOrchestrator(root);
-      const wt = await wm.create({ name: 'final-agent', branch: 'roam/final-agent' });
+      const wt = await wm.create({ name: 'final-agent', branch: 'unode/final-agent' });
 
       await fs.writeFile(path.join(wt.path, 'final.txt'), 'approved\n');
       expect(await orchestrator.commitWorktree(wt, 'final work')).toBe(true);

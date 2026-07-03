@@ -421,7 +421,7 @@ export class WorkflowEngine {
       instance.status = 'paused';
       instance.completedAt = new Date().toISOString();
       instance.context.__blockedReason =
-        'run_checks could not run: command execution is disabled. Set roam.commandApproval to "allowlist" and configure roam.verifyCommand to enable the gate.';
+        'run_checks could not run: command execution is disabled. Set unode.commandApproval to "allowlist" and configure unode.verifyCommand to enable the gate.';
       this.cleanup(instance.id);
       this.onChange();
       return;

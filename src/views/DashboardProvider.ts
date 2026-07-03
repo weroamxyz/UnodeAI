@@ -260,7 +260,7 @@ export class DashboardProvider {
 <body>
   <h1>UnodeAi Dashboard</h1>
   <p class="subtitle">Multi-Agent AI Team Management</p>
-  <p class="subtitle" title="Concurrency mode — change it from the chip in the Team panel or Settings → roam.concurrencyStrategy">Concurrency: ${concurrency}</p>
+  <p class="subtitle" title="Concurrency mode — change it from the chip in the Team panel or Settings → unode.concurrencyStrategy">Concurrency: ${concurrency}</p>
 
   <div class="stats-grid">
     <div class="stat-card">
@@ -298,8 +298,8 @@ export class DashboardProvider {
       <div class="mission-sub">See who is doing what, where it is stuck, and whether it can land.</div>
     </div>
     <div class="mission-actions">
-      <a class="cmd-link" href="command:roam.generateEvidenceReport">Evidence Report</a>
-      <a class="cmd-link secondary" href="command:roam.openChat">Open Chat</a>
+      <a class="cmd-link" href="command:unode.generateEvidenceReport">Evidence Report</a>
+      <a class="cmd-link secondary" href="command:unode.openChat">Open Chat</a>
     </div>
   </div>
   ${laneBoard}
@@ -380,7 +380,7 @@ export class DashboardProvider {
   private _renderRecentTasks(records: TaskTokenRecord[], n: number): string {
     const control = `<span class="task-ctl">Show last: ${RECENT_TASK_COUNT_OPTIONS.map((k) => {
       if (k === n) { return `<b>${k}</b>`; }
-      const href = `command:roam.setDashboardTaskCount?${encodeURIComponent(JSON.stringify([k]))}`;
+      const href = `command:unode.setDashboardTaskCount?${encodeURIComponent(JSON.stringify([k]))}`;
       return `<a href="${href}">${k}</a>`;
     }).join(' · ')}</span>`;
     if (records.length === 0) {
@@ -457,7 +457,7 @@ export function renderMissionControlLanes(sessions: SessionInfo[], state: Dashbo
   </div>`;
   if (sessions.length === 0) {
     return /* html */`<section class="lane-board ${hasWorktree ? 'with-worktree' : 'no-worktree'}">
-      <div class="lane-empty">No agents configured yet. <a href="command:roam.createTeamPreset">Create a team</a> to start Mission Control.</div>
+      <div class="lane-empty">No agents configured yet. <a href="command:unode.createTeamPreset">Create a team</a> to start Mission Control.</div>
     </section>`;
   }
   const progressByAgent = new Map((state.agentStates ?? []).map((s) => [s.agentId, s]));
@@ -496,8 +496,8 @@ function renderMissionControlLane(
   const filesPreview = opts.files.slice(0, 3).join(', ');
   const fileTitle = opts.files.length > 0 ? opts.files.join('\n') : 'No files touched yet';
   const cost = `$${(u?.costUsd ?? 0).toFixed(2)}`;
-  const chatHref = commandUri('roam.chatWithAgent', [session.id]);
-  const terminalHref = commandUri('roam.showAgentTerminal', [session.id]);
+  const chatHref = commandUri('unode.chatWithAgent', [session.id]);
+  const terminalHref = commandUri('unode.showAgentTerminal', [session.id]);
   return /* html */`<div class="lane-row lane-${status}">
     <div class="agent-cell">
       <span class="agent-icon">${renderAgentIcon(cfg.icon)}</span>

@@ -12,9 +12,9 @@
  *  Roam/new-api discounts are applied after conversion: account group_ratio and vendor discount.
  *
  *  Same logic for ANY new-api gateway: ComputeVault/Roam automatically, and "platforms we don't
- *  control" by giving their base/pricing URL via roam.pricingSources. A site that does NOT expose
+ *  control" by giving their base/pricing URL via unode.pricingSources. A site that does NOT expose
  *  a new-api-style /api/pricing (e.g. a hand-written HTML pricing page) can't be parsed reliably —
- *  use the roam.modelPrices manual override for those.
+ *  use the unode.modelPrices manual override for those.
  *--------------------------------------------------------------------------------------------*/
 
 import { ModelPrice } from './ModelPricing';
@@ -83,7 +83,7 @@ export class LivePriceService {
    * gateway base URL (…/v1) or a full …/api/pricing URL. Throws on network/HTTP failure so the
    * caller can log-and-fallback to the static table.
    *
-   * `preferredGroup` lets the user pin their billing group (roam.priceGroup) when the gateway
+   * `preferredGroup` lets the user pin their billing group (unode.priceGroup) when the gateway
    * exposes several; otherwise we auto-pick the single usable group, else "default".
    */
   async fetchGatewayPrices(
@@ -118,7 +118,7 @@ export class LivePriceService {
  * `group_ratio` (group → multiplier) and `usable_group` (groups this account/key may use). The
  * effective price = base × group_ratio[user's group]; ignoring it shows list price, not the user's
  * discounted price. Selection:
- *   1. explicit `preferredGroup` (roam.priceGroup), when valid; else
+ *   1. explicit `preferredGroup` (unode.priceGroup), when valid; else
  *   2. the BEST (lowest multiplier) group the account is entitled to use — so a discounted account
  *      sees its discounted price instead of list price (the old code fell back to "default" = list
  *      when there were several usable groups, which is the bug this fixes); else

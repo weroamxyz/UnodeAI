@@ -26,12 +26,12 @@ Thumbs.db
 .claude/
 
 # Local runtime / external-tool dirs (created when the extension or other tools run against this repo)
-.roam/
+.unode/
 .codeep/
 tools/
 # Claude-backend MCP bridge config written to the agent cwd (contains a local loopback bridge token);
 # normally cleaned up on teardown, but ignore it so an abnormal-exit leftover can never be committed.
-.roam-mcp.json
+.unode-mcp.json
 
 # Stray root-level scratch/debug files (e.g. _find_methods.ts, _verify_v0231.txt)
 /_*.ts

@@ -128,13 +128,13 @@ export interface TurnAttachments {
   model?: string;
   /** Resolved model/sampling params for this turn (F2). Backends apply what they support. */
   modelParams?: AgentModelParams;
-  /** Latest `.roam/rules.md` project memory for this turn (F4). */
+  /** Latest `.unode/rules.md` project memory for this turn (F4). */
   projectContext?: string;
   /**
    * Cline #2: proactive workspace orientation for THIS turn — the active editor file (capped) + current
    * Error/Warning diagnostics, **pre-formatted host-side into a string**. Injected ephemerally into the
    * system message (NOT persisted to history, so stale file content can't accumulate). Opt-in
-   * (`roam.engine.workspaceContext`). Host formats the string; backend caps + injects. (Single contract:
+   * (`unode.engine.workspaceContext`). Host formats the string; backend caps + injects. (Single contract:
    * string. If the host has structured data, format it before attaching.)
    */
   workspaceContext?: string;

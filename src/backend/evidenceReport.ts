@@ -109,7 +109,7 @@ export function buildEvidenceReport(input: EvidenceInput): string {
 
   lines.push('## Verification');
   if (!input.checks) {
-    lines.push('_No verification command was configured (`roam.verifyCommand`), so checks were not run._');
+    lines.push('_No verification command was configured (`unode.verifyCommand`), so checks were not run._');
   } else {
     lines.push(`\`${input.checks.command}\` → ${input.checks.passed ? '✅ passed' : '❌ failed'}`);
     if (!input.checks.passed && input.checks.outputTail) {
@@ -125,7 +125,7 @@ export function buildEvidenceReport(input: EvidenceInput): string {
     lines.push('## Open items');
     lines.push(verdict === 'blocked'
       ? '- The crew could not get the checks to pass within its retry budget. Retry with a stronger model, reassign, or take it over.'
-      : '- Work was applied but not confirmed by the project checks. Set/run `roam.verifyCommand` to verify before relying on it.');
+      : '- Work was applied but not confirmed by the project checks. Set/run `unode.verifyCommand` to verify before relying on it.');
   }
 
   return lines.join('\n');

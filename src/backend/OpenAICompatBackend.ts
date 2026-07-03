@@ -690,8 +690,8 @@ export class OpenAICompatBackend implements AgentBackend {
             // tell the user how to actually enable verification, rather than quietly finishing as if done.
             const note =
               `⚠ NOT verified — the verification command \`${gate.command}\` is blocked by your command ` +
-              `policy, so the completion gate could not confirm this work. Approve it (roam.allowedCommands) ` +
-              `or disable the gate (roam.gate.enabled). ${checks.output ?? ''}`.trim();
+              `policy, so the completion gate could not confirm this work. Approve it (unode.allowedCommands) ` +
+              `or disable the gate (unode.gate.enabled). ${checks.output ?? ''}`.trim();
             finalText = `${finalText}${finalText ? '\n\n' : ''}${note}`;
             this.emit({ kind: 'assistant', text: note });
             break;

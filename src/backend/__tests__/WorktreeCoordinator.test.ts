@@ -19,7 +19,7 @@ function fakeManager(over: Partial<Record<keyof WorktreeManager, unknown>> = {})
     isClean: vi.fn(async () => true),
     list: vi.fn(async () => [] as Worktree[]),
     create: vi.fn(async (opts: { name?: string; branch?: string; agentId?: string } = {}) => ({
-      path: `/wt/${opts.name}`, branch: opts.branch ?? `roam/${opts.name}`, agentId: opts.agentId,
+      path: `/wt/${opts.name}`, branch: opts.branch ?? `unode/${opts.name}`, agentId: opts.agentId,
     })),
     remove: vi.fn(async () => undefined),
     ...over,
@@ -27,7 +27,7 @@ function fakeManager(over: Partial<Record<keyof WorktreeManager, unknown>> = {})
 }
 
 const ok = (status: MergeResult['status'], extra: Partial<MergeResult> = {}): MergeResult => ({
-  status, branch: 'roam/developer-a1', integrationBranch: 'roam/integration', message: status, ...extra,
+  status, branch: 'unode/developer-a1', integrationBranch: 'unode/integration', message: status, ...extra,
 });
 
 function fakeOrchestrator(over: Partial<MergeOrchestrator> = {}): MergeOrchestrator {
@@ -105,7 +105,7 @@ describe('WorktreeCoordinator.assignWorkingDirectory', () => {
   });
 
   it('adopts an existing worktree on the agent branch (survives reload)', async () => {
-    const existing: Worktree = { path: '/wt/developer-a1', branch: 'roam/developer-a1' };
+    const existing: Worktree = { path: '/wt/developer-a1', branch: 'unode/developer-a1' };
     const { deps, coord } = make({ manager: fakeManager({ list: vi.fn(async () => [existing]) }) });
     const p = await coord.assignWorkingDirectory(cfg());
     expect(p).toBe('/wt/developer-a1');

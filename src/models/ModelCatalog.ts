@@ -4,7 +4,7 @@
  *  The add-agent picker needs "which models can this provider serve right now?". Hardcoding that
  *  in the extension means a release every time a gateway adds a model. Instead this service layers
  *  three sources (later ones only fill gaps, names are back-filled):
- *    1. A Roam-hosted curated catalog JSON (roam.modelCatalogUrl) — rich names + per-role hints,
+ *    1. A Roam-hosted curated catalog JSON (unode.modelCatalogUrl) — rich names + per-role hints,
  *       fully remote-controllable.
  *    2. The gateway's own GET {baseUrl}/v1/models (OpenAI-compatible) — live availability. Since
  *       Roam runs ComputeVault, editing the gateway IS remote configuration, no extension update.
@@ -30,7 +30,7 @@ export type CatalogFetch = (
   init?: { headers?: Record<string, string> }
 ) => Promise<{ ok: boolean; status: number; text(): Promise<string> }>;
 
-/** Shape of the curated catalog document at roam.modelCatalogUrl. */
+/** Shape of the curated catalog document at unode.modelCatalogUrl. */
 interface CatalogDoc {
   providers?: Record<string, { models?: Array<{ id: string; name?: string; vision?: boolean; recommendedFor?: string[] }> }>;
 }

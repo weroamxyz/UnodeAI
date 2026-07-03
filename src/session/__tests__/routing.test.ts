@@ -388,7 +388,7 @@ describe('SessionManager <-> MessageBus routing', () => {
     expect(backends.get('dev')!.attachments.map((a) => a?.mode)).toEqual(['plan', 'act']);
   });
 
-  it('appends .roam/rules.md project context to the system prompt at start, without mutating config (F4)', async () => {
+  it('appends .unode/rules.md project context to the system prompt at start, without mutating config (F4)', async () => {
     const localBus = new MessageBus();
     let seenPrompt = '';
     const mgr2 = new SessionManager(5, localBus, {

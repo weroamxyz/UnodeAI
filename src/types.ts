@@ -123,7 +123,7 @@ export interface SmartModeConfig {
 
 /**
  * Advanced model/sampling parameters for an agent (v0.1.1 F1). All optional — resolved layer-by-layer
- * by ModelParamResolver: agent.modelParams > smart tier > global roam.modelDefaults.* > hard defaults.
+ * by ModelParamResolver: agent.modelParams > smart tier > global unode.modelDefaults.* > hard defaults.
  *
  * BACKEND SUPPORT: the full surface applies to OpenAI-compatible backends (passed in the request
  * body). The `claude` headless CLI only honors `reasoning_effort` (→ --effort) and, partially,
@@ -446,7 +446,7 @@ export interface UsageStats {
  *  Extension State
  *--------------------------------------------------------------------------------------------*/
 
-export interface RoamCrewState {
+export interface UnodeCrewState {
   teamConfig: TeamConfig | null;
   sessions: SessionInfo[];
   messages: Message[];

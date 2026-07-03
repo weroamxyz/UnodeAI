@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  UnodeAi - command permission decider (unify Claude agents with roam.commandApproval)
+ *  UnodeAi - command permission decider (unify Claude agents with unode.commandApproval)
  *
  *  Claude agents run under the `claude` CLI's own --permission-mode, so historically their shell
  *  commands BYPASSED Roam's commandApproval (no approval card — see the PM verify-deadlock saga).
@@ -25,6 +25,9 @@ export interface CommandPermissionDeps {
   policy?: CommandPolicy;
   /** 'ask'-mode approver (shows the approval card). Should already be bound to this agent's name. */
   requestApproval?: CommandApprover;
+  /** VS Code Workspace Trust state. `false` hard-denies shell commands (untrusted workspace); `true`/undefined
+   *  leaves gating to the policy. Evaluated by the caller so this module stays vscode-free. */
+  isTrusted?: boolean;
 }
 
 /** claude built-in tools that execute a shell command (carry it in input.command). Only these are gated;
@@ -49,6 +52,9 @@ export async function decideCommandPermission(
   if (!command) {
     return { behavior: 'allow', updatedInput: input };
   }
+  if (deps.isTrusted === false) {
+    return { behavior: 'deny', message: 'Shell commands are disabled: this workspace is not trusted. Ask the user to trust the workspace (Workspace Trust) before running commands.' };
+  }
   const verdict = deps.policy?.check(command);
   if (!verdict || verdict.allowed) {
     return { behavior: 'allow', updatedInput: input };
@@ -61,5 +67,5 @@ export async function decideCommandPermission(
     const note = decision.note ? ` The user said: "${decision.note}". Adjust or ask them what to do.` : '';
     return { behavior: 'deny', message: `Command not approved by the user.${note}` };
   }
-  return { behavior: 'deny', message: `Command blocked by roam.commandApproval: ${verdict.reason ?? 'not allowed'}.` };
+  return { behavior: 'deny', message: `Command blocked by unode.commandApproval: ${verdict.reason ?? 'not allowed'}.` };
 }

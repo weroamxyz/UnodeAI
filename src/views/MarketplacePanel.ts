@@ -73,11 +73,11 @@ export class MarketplacePanel {
       return;
     }
     if (msg.command === 'openAgentBuilder') {
-      void vscode.commands.executeCommand('roam.openAgentBuilder');
+      void vscode.commands.executeCommand('unode.openAgentBuilder');
       return;
     }
     if (msg.command === 'addMcpServer') {
-      void vscode.commands.executeCommand('roam.addMcpServer');
+      void vscode.commands.executeCommand('unode.addMcpServer');
       return;
     }
     if (msg.command !== 'install') {
@@ -115,9 +115,9 @@ async function loadBundledCatalog(extensionUri: vscode.Uri): Promise<Marketplace
   };
   // v0.6.1a: optionally merge a Roam-hosted catalog (off until a catalogUrl is configured). Each
   // section is parsed resiliently and a hosted-fetch failure falls back to the bundled set.
-  const cfg = vscode.workspace.getConfiguration('roam');
+  const cfg = vscode.workspace.getConfiguration('unode');
   const url = cfg.get<string>('marketplace.catalogUrl', '').trim();
-  const hosted = cfg.get<boolean>('marketplace.fetchCatalog', true) && url
+  const hosted = cfg.get<boolean>('marketplace.fetchCatalog', false) && url
     ? { url, timeoutMs: 5000, verify: { publicKeyPem: ROAM_CATALOG_PUBLIC_KEY_PEM } }
     : undefined;
   return resolveCatalog({

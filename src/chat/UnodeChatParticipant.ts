@@ -6,13 +6,13 @@
  *  chat-provided model, so the cost-arbitrage/multi-agent value is preserved), stream the run back into
  *  the panel, and offer an "Open in UnodeAi" jump to the full team view.
  *
- *  Toggle with `roam.chatParticipant.enabled` (default on). The handler logic is split from the vscode
+ *  Toggle with `unode.chatParticipant.enabled` (default on). The handler logic is split from the vscode
  *  registration so it's unit-testable with a fake stream + fake runner.
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
 
-export interface RoamChatParticipantDeps {
+export interface UnodeChatParticipantDeps {
   /**
    * Run a goal on the crew. Stream text back via `onText`; resolve when the turn completes. Routes to
    * UnodeAi's own backend (not the chat model). `error` is set for a user-actionable problem (e.g. no
@@ -26,7 +26,7 @@ export interface RoamChatParticipantDeps {
 }
 
 /** The chat request handler — exported separately so it can be unit-tested without `vscode.chat`. */
-export function makeRoamChatHandler(deps: RoamChatParticipantDeps): vscode.ChatRequestHandler {
+export function makeUnodeChatHandler(deps: UnodeChatParticipantDeps): vscode.ChatRequestHandler {
   return async (request, _context, stream, token) => {
     const goal = (request.prompt ?? '').trim();
     if (!goal) {
@@ -51,17 +51,17 @@ export function makeRoamChatHandler(deps: RoamChatParticipantDeps): vscode.ChatR
     }
     // The crew's parallel/visual richness (per-agent transcripts, worktree lanes) lives in the full
     // view; the chat is the front door.
-    stream.button({ command: 'roam.showTeamPanel', title: 'Open in UnodeAi' });
+    stream.button({ command: 'unode.showTeamPanel', title: 'Open in UnodeAi' });
     return {};
   };
 }
 
 /** Register `@roam` in the Chat panel. The `id` must match `contributes.chatParticipants[].id`. */
-export function registerRoamChatParticipant(
+export function registerUnodeChatParticipant(
   extensionUri: vscode.Uri,
-  deps: RoamChatParticipantDeps
+  deps: UnodeChatParticipantDeps
 ): vscode.ChatParticipant {
-  const participant = vscode.chat.createChatParticipant('roam.crew', makeRoamChatHandler(deps));
+  const participant = vscode.chat.createChatParticipant('unode.crew', makeUnodeChatHandler(deps));
   try {
     participant.iconPath = vscode.Uri.joinPath(extensionUri, 'images', 'icon.png');
   } catch {

@@ -123,7 +123,7 @@ type WebviewMessage =
   | { command?: 'setApproval'; kind?: unknown; value?: unknown };
 
 export class ChatViewProvider implements vscode.WebviewViewProvider, vscode.Disposable {
-  public static readonly viewType = 'roam.chat';
+  public static readonly viewType = 'unode.chat';
 
   private view?: vscode.WebviewView;
   private readonly replyDisposer: () => void;

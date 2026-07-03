@@ -2,7 +2,7 @@
  *  UnodeAi - SettingsBridge (P1#4b / P1#8)
  *  One place that reads & writes everything "settings": VS Code config (roam.*), API keys
  *  (SecretStorage), and the MCP server registry. Centralizing this both powers the Settings panel
- *  AND pulls the scattered getConfiguration('roam') calls out of extension.ts (the GLM-flagged
+ *  AND pulls the scattered getConfiguration('unode') calls out of extension.ts (the GLM-flagged
  *  refactor). Dependencies are injected as small interfaces so the bridge is unit-testable without
  *  the vscode module.
  *

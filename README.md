@@ -11,13 +11,13 @@ Build a team of AI agents inside VS Code. Each agent runs in its own session wit
 - **Rich chat with every agent** — a full conversation panel per agent in the sidebar: Markdown & code rendering, **live token streaming** with a Stop button, **tool-call cards** (with unified diffs for file edits), a **context-usage bar**, and compaction markers. Switch between agents from one view.
 - **Plan / Act mode** — a per-agent toggle. **Plan mode is enforced at the tool layer** (the agent gets read-only tools only; file writes, commands, delegation, and MCP tools are refused — not just discouraged by a prompt), so a planning turn is genuinely safe.
 - **PM orchestration** — a coordinator agent delegates tasks, runs build/type-check/test gates, and routes fixes back to the right teammate. Agents collaborate over an in-process message bus you can follow in the Activity Feed.
-- **Verified worktree fan-out — a crew only lands work that passes your checks.** Each agent works in its **own git worktree** (true isolation); on every turn UnodeAi runs your `verifyCommand` (build/lint/test) in that worktree and merges to a `roam/integration` branch **only if it passes** — failing work is held on its branch and handed back to fix. The review board shows per-lane ✓ verified / ✗ failing / ⚠ unverified, and **flags any lane that passed by editing the tests instead of fixing the code**. Land it all with one **Finalize**. Neither Cline nor Kilo gate the *team* merge on verification — this is the moat. (Opt-in: `roam.concurrencyStrategy: "worktree"`.)
+- **Verified worktree fan-out — a crew only lands work that passes your checks.** Each agent works in its **own git worktree** (true isolation); on every turn UnodeAi runs your `verifyCommand` (build/lint/test) in that worktree and merges to a `unode/integration` branch **only if it passes** — failing work is held on its branch and handed back to fix. The review board shows per-lane ✓ verified / ✗ failing / ⚠ unverified, and **flags any lane that passed by editing the tests instead of fixing the code**. Land it all with one **Finalize**. Neither Cline nor Kilo gate the *team* merge on verification — this is the moat. (Opt-in: `unode.concurrencyStrategy: "worktree"`.)
 - **Multi-model team (cost arbitrage)** — assign a different provider and model per role: premium models for reasoning, cheaper Roam-hosted models for routine work. And because the **default Roam gateway is deeply discounted**, even premium models run at price-competitive rates. **Smart Mode** can auto-pick a tier (economy / standard / premium) per task.
 - **Reliable on cheap & open models** — the whole point of running DeepSeek / Kimi / Qwen instead of a premium seat is that they actually finish the job. UnodeAi makes them: it **recovers malformed or mis-formatted tool calls**, adapts the **tool-calling format per model**, retries empty/stuck turns, **escalates a refusing model to its fallback**, and injects your project's conventions — so weak models complete tasks instead of stalling.
-- **Visual workflow editor** — design multi-step pipelines with **conditional branches** (jump to a step when a result matches), drag-to-reorder, and built-in templates. Saved to `.roam/team.json`.
+- **Visual workflow editor** — design multi-step pipelines with **conditional branches** (jump to a step when a result matches), drag-to-reorder, and built-in templates. Saved to `.unode/team.json`.
 - **MCP servers** — connect real tools (GitHub, Playwright, filesystem, …). Default-deny per agent, with approval before mounting; tools appear inline in chat as cards.
 - **Advanced model tuning, per agent** — temperature, top_p, max tokens, reasoning effort, penalties, stop sequences, response format, thinking, and a per-agent context window — all from a Settings UI, no JSON editing.
-- **Session memory** — a `.roam/rules.md` project memory is shared into every agent's context (à la `.clinerules`).
+- **Session memory** — a `.unode/rules.md` project memory is shared into every agent's context (à la `.clinerules`).
 - **30-seconds-to-value onboarding** — a first-run setup wizard (provider + key, one-click team, demo task) and a built-in demo-task library.
 - **Safe by default** — workspace file sandbox, command-execution policy (off by default), per-provider secret storage, and MCP default-deny + approval.
 
@@ -51,14 +51,14 @@ Most "AI agents" ask you to trust them. UnodeAi is **locked down out of the box*
 when you say so — the safe defaults *are* the product, not a settings page you have to find:
 
 - **Workspace sandbox.** File reads/writes can't escape your project folder; path traversal is blocked.
-- **Commands are off until you allow them.** `roam.commandApproval` defaults to *ask/deny* — an agent
+- **Commands are off until you allow them.** `unode.commandApproval` defaults to *ask/deny* — an agent
   can't run a shell command without your say-so. Risky writes can require diff approval too.
 - **Plan mode is enforced at the tool layer, not the prompt.** A planning turn literally has no
   write/run/delegate/MCP tools — so "just analyze this" can't change a single file, even if the model
   tries.
 - **MCP is default-deny.** New MCP servers mount only after explicit approval, and an agent only sees the
   servers it was granted.
-- **Keys never touch disk.** API keys live in VS Code SecretStorage — never in `.roam/team.json`,
+- **Keys never touch disk.** API keys live in VS Code SecretStorage — never in `.unode/team.json`,
   settings, chat exports, or git.
 - **Verified-only landing.** Worktree-isolated agents merge only after your `verifyCommand` passes, and
   the PM can't report a goal "done" while the build/tests are red — a deadlock-safe gate, not a vibe.

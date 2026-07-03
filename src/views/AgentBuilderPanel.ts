@@ -141,7 +141,7 @@ export class AgentBuilderPanel {
       vscode.ViewColumn.One,
       // Narrowed to the single command the panel links to (the "Manage in Settings →" link), rather than
       // enabling ALL command URIs in a webview that renders dynamic catalog/agent content.
-      { enableScripts: true, enableCommandUris: ['roam.openSettings'], retainContextWhenHidden: true, localResourceRoots: [extensionUri] }
+      { enableScripts: true, enableCommandUris: ['unode.openSettings'], retainContextWhenHidden: true, localResourceRoots: [extensionUri] }
     );
     AgentBuilderPanel.current = new AgentBuilderPanel(panel, deps, agentId);
   }
@@ -469,7 +469,7 @@ export function renderAgentBuilderHtml(webview: vscode.Webview, view: AgentBuild
         <div class="grid">
           <div class="field"><label for="mp_tier">Tier for this agent</label><select id="mp_tier">${tierOptions(initial.tier)}</select></div>
         </div>
-        <p class="help">The tier → model mapping (and global defaults) live in <a href="command:roam.openSettings">Settings → Smart Mode →</a></p>
+        <p class="help">The tier → model mapping (and global defaults) live in <a href="command:unode.openSettings">Settings → Smart Mode →</a></p>
       </section>
 
       <section class="panel">

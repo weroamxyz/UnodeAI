@@ -12,7 +12,7 @@ import { tmpdir } from 'node:os';
 
 const root = process.cwd();
 const staging = join(root, '.bundle-package');
-const bundleOutDir = join(tmpdir(), 'roam-crew-vsix');
+const bundleOutDir = join(tmpdir(), 'unodeai-vsix');
 const nodeModules = join(root, 'node_modules');
 const vsce = process.platform === 'win32'
   ? join(root, 'node_modules', '.bin', 'vsce.cmd')
@@ -90,9 +90,9 @@ try {
     copyDir(join(nodeModules, name), join(staging, 'node_modules', name));
   }
 
-  const bundleOutPath = join(bundleOutDir, `roam-crew-${pkg.version}-bundled.vsix`);
+  const bundleOutPath = join(bundleOutDir, `unodeai-${pkg.version}-bundled.vsix`);
   run(vsce, ['package', '--out', bundleOutPath], staging);
-  cpSync(bundleOutPath, join(root, `roam-crew-${pkg.version}-bundled.vsix`));
+  cpSync(bundleOutPath, join(root, `unodeai-${pkg.version}-bundled.vsix`));
 } finally {
   rmSync(staging, { recursive: true, force: true });
 }

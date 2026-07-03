@@ -6,13 +6,13 @@ vi.mock('vscode', () => ({}));
 
 import { isFileNotFound } from '../PersistenceManager';
 
-// Regression: a missing .roam/team.json must be treated as "absent" (silent), not a warning.
+// Regression: a missing .unode/team.json must be treated as "absent" (silent), not a warning.
 // The file is read via vscode.workspace.fs, which throws a vscode.FileSystemError — its `.code`
 // is 'FileNotFound', and/or it wraps a raw Node error whose only ENOENT signal is in the message.
 // The old guard checked only Node's `code === 'ENOENT'`, so those shapes leaked a user-facing warning.
 describe('isFileNotFound', () => {
   it('detects a Node ENOENT errno', () => {
-    const err = Object.assign(new Error("ENOENT: no such file or directory, open 'x/.roam/team.json'"), {
+    const err = Object.assign(new Error("ENOENT: no such file or directory, open 'x/.unode/team.json'"), {
       code: 'ENOENT',
     });
     expect(isFileNotFound(err)).toBe(true);
@@ -32,7 +32,7 @@ describe('isFileNotFound', () => {
   });
 
   it('does NOT swallow real errors (parse/validation, permission)', () => {
-    expect(isFileNotFound(new Error('Invalid .roam/team.json: members must be an array'))).toBe(false);
+    expect(isFileNotFound(new Error('Invalid .unode/team.json: members must be an array'))).toBe(false);
     expect(isFileNotFound(Object.assign(new Error('permission denied'), { code: 'EACCES' }))).toBe(false);
     expect(isFileNotFound(undefined)).toBe(false);
   });

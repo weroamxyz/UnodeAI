@@ -451,7 +451,7 @@ describe('TeamTools (PM coordinator)', () => {
       runCommand: async () => ({ code: 0, output: 'should not run' }),
     });
     const out = await t.run('run_checks', {});
-    expect(out).toMatch(/blocked by roam.commandApproval/);
+    expect(out).toMatch(/blocked by unode.commandApproval/);
   });
 
   it('run_checks notifies onCommandBlocked when policy blocks (B2)', async () => {
@@ -504,7 +504,7 @@ describe('TeamTools (PM coordinator)', () => {
       runCommand: async () => ({ code: 0, output: 'should not run' }),
     });
     const out = await t.run('run_checks', {});
-    expect(out).toMatch(/blocked by roam.commandApproval/);
+    expect(out).toMatch(/blocked by unode.commandApproval/);
   });
 });
 

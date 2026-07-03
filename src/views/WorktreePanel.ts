@@ -37,7 +37,7 @@ export type WorktreeLaneAction =
   | { command: 'handBackLane'; agentId: string };
 export type WorktreeLaneActionHandler = (action: WorktreeLaneAction) => Promise<void> | void;
 
-const EMPTY: WorktreeReview = { base: '', integrationBranch: 'roam/integration', hasIntegration: false, lanes: [], integrationFiles: [] };
+const EMPTY: WorktreeReview = { base: '', integrationBranch: 'unode/integration', hasIntegration: false, lanes: [], integrationFiles: [] };
 
 export class WorktreePanel {
   public static current: WorktreePanel | undefined;
@@ -272,7 +272,7 @@ export function renderHtml(webview: vscode.Webview, r: WorktreeReview): string {
 
   <div class="section-title">Isolation lanes (${r.lanes.length})</div>
   ${r.lanes.length === 0
-    ? `<div class="empty">No agents are isolated right now. Enable worktree mode (<code>roam.concurrencyStrategy</code> = <code>worktree</code>) and start a team.</div>`
+    ? `<div class="empty">No agents are isolated right now. Enable worktree mode (<code>unode.concurrencyStrategy</code> = <code>worktree</code>) and start a team.</div>`
     : r.lanes.map(renderLane).join('')}
 
   <div class="section-title">Staged for review → ${esc(r.base || 'base')} (${r.integrationFiles.length} file${r.integrationFiles.length === 1 ? '' : 's'})</div>

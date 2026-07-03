@@ -2,7 +2,7 @@
  *  UnodeAi - PersistenceManager
  *  Persists the team roster (agent configs) and usage stats so the team survives reloads.
  *
- *  Agent CONFIGS live in workspaceState (and optionally a versionable `.roam/team.json`).
+ *  Agent CONFIGS live in workspaceState (and optionally a versionable `.unode/team.json`).
  *  API KEYS never go here — they live in SecretStorage (see SecretsManager). The two are joined
  *  at runtime via AgentConfig.provider.apiKeySecretName.
  *--------------------------------------------------------------------------------------------*/
@@ -124,7 +124,7 @@ export class PersistenceManager {
   }
 
   /**
-   * Delete the versionable team file (<workspace>/.roam/team.json). Part of a full workspace reset:
+   * Delete the versionable team file (<workspace>/.unode/team.json). Part of a full workspace reset:
    * otherwise an empty workspaceState would re-seed the just-cleared roster from this file on reload.
    * Best-effort — silently ignores an absent file or no workspace.
    */
@@ -133,7 +133,7 @@ export class PersistenceManager {
     if (!folder) {
       return;
     }
-    const uri = vscode.Uri.joinPath(folder.uri, '.roam', 'team.json');
+    const uri = vscode.Uri.joinPath(folder.uri, '.unode', 'team.json');
     try {
       await vscode.workspace.fs.delete(uri);
     } catch {
@@ -142,7 +142,7 @@ export class PersistenceManager {
   }
 
   /**
-   * Best-effort load of a versionable team file at <workspace>/.roam/team.json.
+   * Best-effort load of a versionable team file at <workspace>/.unode/team.json.
    * Returns undefined if absent or malformed (caller falls back to workspaceState).
    */
   async loadTeamFile(): Promise<AgentConfig[] | undefined> {
@@ -150,13 +150,13 @@ export class PersistenceManager {
     return doc?.members;
   }
 
-  /** Load and validate the full versionable .roam/team.json document. */
+  /** Load and validate the full versionable .unode/team.json document. */
   async loadTeamConfig(): Promise<TeamFileDocument | undefined> {
     const folder = vscode.workspace.workspaceFolders?.[0];
     if (!folder) {
       return undefined;
     }
-    const uri = vscode.Uri.joinPath(folder.uri, '.roam', 'team.json');
+    const uri = vscode.Uri.joinPath(folder.uri, '.unode', 'team.json');
     try {
       const bytes = await vscode.workspace.fs.readFile(uri);
       const parsed = JSON.parse(Buffer.from(bytes).toString('utf8'));
@@ -170,9 +170,9 @@ export class PersistenceManager {
   async saveTeamConfig(doc: TeamFileDocument): Promise<void> {
     const folder = vscode.workspace.workspaceFolders?.[0];
     if (!folder) {
-      throw new Error('Open a workspace before saving .roam/team.json.');
+      throw new Error('Open a workspace before saving .unode/team.json.');
     }
-    const dir = vscode.Uri.joinPath(folder.uri, '.roam');
+    const dir = vscode.Uri.joinPath(folder.uri, '.unode');
     const uri = vscode.Uri.joinPath(dir, 'team.json');
     await vscode.workspace.fs.createDirectory(dir);
     const normalized: TeamFileDocument = {
@@ -194,7 +194,7 @@ export class PersistenceManager {
     });
   }
 
-  /** 段2: team-level MCP server registry from .roam/team.json (empty if absent/malformed). */
+  /** 段2: team-level MCP server registry from .unode/team.json (empty if absent/malformed). */
   async loadTeamMcpServers(): Promise<MCPServerConfig[]> {
     return (await this.loadTeamConfig())?.mcpServers ?? [];
   }
@@ -211,6 +211,6 @@ export class PersistenceManager {
       : err instanceof Error
         ? err.message
         : String(err);
-    void vscode.window.showWarningMessage(`UnodeAi ignored .roam/team.json: ${message}`);
+    void vscode.window.showWarningMessage(`UnodeAi ignored .unode/team.json: ${message}`);
   }
 }

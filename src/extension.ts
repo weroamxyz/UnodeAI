@@ -24,7 +24,7 @@ import { MessageLogProvider } from './views/MessageLogProvider';
 import { ChatViewProvider } from './views/ChatViewProvider';
 import { OrchestrationProgressTracker } from './views/orchestrationProgress';
 import { summarizeArchive } from './views/chatArchive';
-import { registerRoamChatParticipant } from './chat/RoamChatParticipant';
+import { registerUnodeChatParticipant } from './chat/UnodeChatParticipant';
 import { WorkflowEditor } from './views/WorkflowEditor';
 import { OnboardingWizard } from './views/OnboardingWizard';
 import { openTeamRulesPanel } from './views/TeamRulesPanel';
@@ -135,7 +135,7 @@ let rulesFile: RulesFile;
 let sharedMemory: SharedMemory;
 let projectConventions: ProjectConventions;
 const skillResolver = new SkillResolver(SKILL_LIBRARY);
-/** Team-level MCP server registry (id -> config), loaded from .roam/team.json. */
+/** Team-level MCP server registry (id -> config), loaded from .unode/team.json. */
 const mcpRegistry = new Map<string, MCPServerConfig>();
 const WORKSPACE_CONTEXT_ACTIVE_FILE_CHAR_CAP = 12000;
 const WORKSPACE_CONTEXT_ACTIVE_FILE_LINE_CAP = 150;
@@ -191,13 +191,89 @@ function getAgentChannel(id: string): vscode.OutputChannel {
 
 let outputChannel: vscode.LogOutputChannel;
 let statusBarItem: vscode.StatusBarItem;
-let roamVersion = ''; // set at activate; kept in every status-bar text so the version always shows
+let unodeVersion = ''; // set at activate; kept in every status-bar text so the version always shows
 
 // ─── Activation ───────────────────────────────────────────────────────
+
+/**
+ * One-time migration of user settings from the legacy `roam.*` configuration namespace to `unode.*`
+ * (the extension was rebranded Roam Crew → UnodeAi). Reads the extension's own declared `unode.*`
+ * config keys and copies any value the user explicitly set under the old `roam.*` key, unless the new
+ * key is already set. Provider ids, secrets, and per-extension state are untouched. Idempotent via a
+ * globalState flag. Best-effort: failures are logged, never fatal.
+ */
+async function migrateRoamSettingsToUnode(context: vscode.ExtensionContext): Promise<void> {
+  const FLAG = 'unode.migration.namespace.v1';
+  if (context.globalState.get(FLAG)) { return; }
+  try {
+    const props: Record<string, unknown> =
+      (context.extension?.packageJSON?.contributes?.configuration?.properties) ?? {};
+    const oldCfg = vscode.workspace.getConfiguration('roam');
+    const newCfg = vscode.workspace.getConfiguration('unode');
+    const hasWorkspace = (vscode.workspace.workspaceFolders?.length ?? 0) > 0;
+    let migrated = 0;
+    for (const fullKey of Object.keys(props)) {
+      if (!fullKey.startsWith('unode.')) { continue; }
+      const key = fullKey.slice('unode.'.length);
+      const oldI = oldCfg.inspect(key);
+      const newI = newCfg.inspect(key);
+      if (oldI?.globalValue !== undefined && newI?.globalValue === undefined) {
+        await newCfg.update(key, oldI.globalValue, vscode.ConfigurationTarget.Global);
+        migrated++;
+      }
+      if (hasWorkspace && oldI?.workspaceValue !== undefined && newI?.workspaceValue === undefined) {
+        await newCfg.update(key, oldI.workspaceValue, vscode.ConfigurationTarget.Workspace);
+        migrated++;
+      }
+    }
+    await context.globalState.update(FLAG, true);
+    if (migrated > 0) { outputChannel.info(`Migrated ${migrated} setting(s) from roam.* to unode.* namespace.`); }
+  } catch (e) {
+    outputChannel.warn(`Settings migration (roam.* → unode.*) skipped: ${String(e)}`);
+  }
+}
+
+/**
+ * One-time migration of the per-workspace data directory `.roam/` → `.unode/` (rebrand). Holds the
+ * team roster (team.json), project/shared memory (rules.md, memory/), MCP config, and worktrees.
+ * Renames the directory if the old one exists and the new one does not, then repairs any git worktrees
+ * whose gitdir links the move invalidated. Best-effort; failures are logged, never fatal.
+ */
+async function migrateRoamWorkspaceDir(): Promise<void> {
+  try {
+    if ((vscode.workspace.workspaceFolders?.length ?? 0) === 0) { return; } // never touch process.cwd() fallback
+    const root = workspaceRoot();
+    const oldDir = path.join(root, '.roam');
+    const newDir = path.join(root, '.unode');
+    const exists = async (p: string) => { try { await fs.access(p); return true; } catch { return false; } };
+    if (!(await exists(oldDir)) || (await exists(newDir))) { return; }
+    await fs.rename(oldDir, newDir);
+    outputChannel.info('Migrated workspace data dir .roam/ → .unode/');
+    // The move broke gitdir links for any worktrees under .unode/worktrees; repair them (best-effort).
+    await new Promise<void>((resolve) => {
+      const p = cpSpawn('git', ['-C', root, 'worktree', 'repair'], { stdio: 'ignore' });
+      const t = setTimeout(() => { try { p.kill(); } catch { /* ignore */ } resolve(); }, 15000);
+      p.on('close', () => { clearTimeout(t); resolve(); });
+      p.on('error', () => { clearTimeout(t); resolve(); });
+    });
+  } catch (e) {
+    outputChannel.warn(`Workspace dir migration (.roam → .unode) skipped: ${String(e)}`);
+  }
+}
 
 export async function activate(context: vscode.ExtensionContext) {
   outputChannel = vscode.window.createOutputChannel('UnodeAi', { log: true });
   outputChannel.info('UnodeAi activating...');
+  await migrateRoamSettingsToUnode(context); // rebrand: carry legacy roam.* settings into unode.*
+  await migrateRoamWorkspaceDir();           // rebrand: move legacy .roam/ workspace data → .unode/
+
+  // Workspace Trust: when the user grants trust mid-session, mount any MCP servers referenced by agents
+  // (they were skipped at activation while untrusted). Command execution is checked live, so it needs no
+  // re-arming here. Registered on the context so it's disposed on deactivate.
+  context.subscriptions.push(vscode.workspace.onDidGrantWorkspaceTrust(() => {
+    outputChannel.info('Workspace trusted — mounting referenced MCP servers.');
+    try { registerReferencedMcpServers(); } catch (e) { outputChannel.warn(`MCP mount after trust failed: ${String(e)}`); }
+  }));
 
   secrets = new SecretsManager(context.secrets);
   persistence = new PersistenceManager(context);
@@ -222,10 +298,10 @@ export async function activate(context: vscode.ExtensionContext) {
         (m): ModelInfo => ({ id: m.id, name: m.name, vision: m.supportsVision, source: 'static' })
       ),
     (url, init) => (globalThis as any).fetch(url, init),
-    { catalogUrl: vscode.workspace.getConfiguration('roam').get<string>('modelCatalogUrl', '') || undefined }
+    { catalogUrl: vscode.workspace.getConfiguration('unode').get<string>('modelCatalogUrl', '') || undefined }
   );
 
-  // F4: project memory (.roam/rules.md), appended to every agent's system prompt at start.
+  // F4: project memory (.unode/rules.md), appended to every agent's system prompt at start.
   rulesFile = new RulesFile(rulesFilePath(workspaceRoot()));
   sharedMemory = new SharedMemory(memoryFilePath(workspaceRoot()));
   // A1/A2: auto-detected project conventions (package.json scripts + how to run them), injected the
@@ -249,7 +325,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   }
 
-  // F2: resolve effective model/sampling params (agent override > global roam.modelDefaults > defaults).
+  // F2: resolve effective model/sampling params (agent override > global unode.modelDefaults > defaults).
   const modelParamResolver = new ModelParamResolver(makeConfigStore());
   const summarizer = new LlmSummarizer();
   const localMcpServerFactory = createSharedLocalMcpServerFactory();
@@ -277,25 +353,31 @@ export async function activate(context: vscode.ExtensionContext) {
       const net = isSolo ? { maxToolIterations: SOLO_MAX_TOOL_ITERATIONS } : {};
       // A solo agent has no teammates, so the optimistic "read the file before you overwrite it"
       // guard is pure friction (it can't clobber anyone). Skip it for solo; teams keep it.
-      // Worktree fan-out: an isolated agent (workingDirectory under .roam/worktrees/) has its own
+      // Worktree fan-out: an isolated agent (workingDirectory under .unode/worktrees/) has its own
       // tree, so the optimistic cross-agent guard is pure friction there too — use Noop.
       const isolated = !!runtimeConfig.workingDirectory && runtimeConfig.workingDirectory.includes(WORKTREES_DIR);
       const coordinator = (isSolo || isolated) ? new NoopFileCoordinator() : fileCoordinator;
       // #13: run the agent's commands in a real VS Code terminal (PTY) so TTY-needing tools (vitest)
       // work and the user sees them; falls back to raw spawn where shell integration is unavailable.
-      const commandExecutor = terminalManager.executorFor(runtimeConfig.id, `Roam: ${runtimeConfig.name}`);
-      // Live thunk so toggling roam.writeApproval applies to running agents without a restart.
-      const writeApprovalAsk = () => vscode.workspace.getConfiguration('roam').get<'none' | 'ask'>('writeApproval', 'none') === 'ask';
+      const rawCommandExecutor = terminalManager.executorFor(runtimeConfig.id, `Unode: ${runtimeConfig.name}`);
+      // Workspace Trust gate: never execute a shell command in an untrusted workspace (checked live, so
+      // granting trust mid-session takes effect immediately without restarting the agent).
+      const commandExecutor: typeof rawCommandExecutor = (command, opts) =>
+        vscode.workspace.isTrusted
+          ? rawCommandExecutor(command, opts)
+          : Promise.resolve({ code: null, output: 'Blocked: this workspace is not trusted, so shell commands are disabled. Trust the workspace (Workspace Trust) to enable them.' });
+      // Live thunk so toggling unode.writeApproval applies to running agents without a restart.
+      const writeApprovalAsk = () => vscode.workspace.getConfiguration('unode').get<'none' | 'ask'>('writeApproval', 'none') === 'ask';
       const memoryWriter = async (agentId: string, note: string) => {
         const ok = await sharedMemory.append(agentId, note);
         if (!ok) {
-          return 'Error: shared memory is unavailable (no workspace folder open, or .roam/memory is not writable). The note was NOT saved.';
+          return 'Error: shared memory is unavailable (no workspace folder open, or .unode/memory is not writable). The note was NOT saved.';
         }
         void sharedMemory.load();
         return 'Noted to shared team memory.';
       };
       // v0.5.2 Execution Engine: write→feedback diagnostics + verification obligation (each kill-switched).
-      const engineCfg = vscode.workspace.getConfiguration('roam');
+      const engineCfg = vscode.workspace.getConfiguration('unode');
       const agentCwd = runtimeConfig.workingDirectory || workspaceRoot();
       // Worktree fan-out: in worktree mode, let every agent READ the team's merged work from the
       // integration worktree when a file isn't in its own tree (writes stay isolated). The path is the
@@ -330,7 +412,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const claudeDeps: ClaudeHeadlessBackendDeps = {
       // Command-approval gate: route this Claude agent's shell commands through Roam's CommandPolicy +
       // approval card (named for this agent) — unifies "Ask each" across Claude and OpenAI-compat agents.
-      commandPermission: { policy: commandPolicy, requestApproval: approveForAgent },
+      commandPermission: { policy: commandPolicy, requestApproval: approveForAgent, isTrusted: () => vscode.workspace.isTrusted },
     };
     if (canDelegate(config)) {
       // PM also gets the team bridge so a Claude PM can delegate (list_agents/assign_task/…).
@@ -340,9 +422,9 @@ export async function activate(context: vscode.ExtensionContext) {
     return new ClaudeHeadlessBackend(config, mcpConfig, modelParamResolver.resolve(config), claudeDeps);
   };
 
-  // Cost estimator: built-in price table, overridden by the roam.modelPrices setting, and kept
+  // Cost estimator: built-in price table, overridden by the unode.modelPrices setting, and kept
   // current by live refreshes from gateway /api/pricing endpoints (see refreshPrices).
-  const priceOverrides = vscode.workspace.getConfiguration('roam').get<Record<string, ModelPrice>>('modelPrices', {});
+  const priceOverrides = vscode.workspace.getConfiguration('unode').get<Record<string, ModelPrice>>('modelPrices', {});
   pricing = new ModelPricing({ ...DEFAULT_MODEL_PRICES, ...priceOverrides });
   livePrices = new LivePriceService((url, init) => (globalThis as any).fetch(url, init));
   balanceService = new BalanceService((url, init) => (globalThis as any).fetch(url, init));
@@ -351,7 +433,7 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push({ dispose: () => clearInterval(priceTimer) });
 
   sessionManager = new SessionManager(
-    vscode.workspace.getConfiguration('roam').get('maxConcurrentAgents', 10),
+    vscode.workspace.getConfiguration('unode').get('maxConcurrentAgents', 10),
     messageBus,
     {
       createBackend,
@@ -404,7 +486,7 @@ export async function activate(context: vscode.ExtensionContext) {
             parts.push(tree);
           }
           // Richer per-turn orientation (diagnostics + active editor file) stays opt-in via the flag.
-          const cfg = vscode.workspace.getConfiguration('roam');
+          const cfg = vscode.workspace.getConfiguration('unode');
           if (cfg.get<boolean>('engine.workspaceContext', false)) {
             const editor = vscode.window.activeTextEditor;
             // Diagnostics FIRST: compact + high-value, so they survive the backend's total cap even when the
@@ -438,46 +520,46 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   );
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((event) => {
-    if (event.affectsConfiguration('roam.maxConcurrentAgents')) {
-      sessionManager.setMaxConcurrent(vscode.workspace.getConfiguration('roam').get('maxConcurrentAgents', 10));
+    if (event.affectsConfiguration('unode.maxConcurrentAgents')) {
+      sessionManager.setMaxConcurrent(vscode.workspace.getConfiguration('unode').get('maxConcurrentAgents', 10));
     }
-    if (event.affectsConfiguration('roam.chatParticipant.enabled')) {
+    if (event.affectsConfiguration('unode.chatParticipant.enabled')) {
       syncRoamChatParticipant();
     }
-    if (event.affectsConfiguration('roam.concurrencyStrategy')) {
+    if (event.affectsConfiguration('unode.concurrencyStrategy')) {
       syncConcurrencyContext(); // keep the title-bar icon in sync when changed from Settings
       teamViewProvider?.refresh();
       void refreshDashboardPanel();
     }
     // Smart Mode on/off, role tiers, or the tier→model matrix changed → re-render the team cards so the
     // ⚡ Smart → <model> badge reflects reality immediately (Settings-panel edits AND raw settings.json edits).
-    if (event.affectsConfiguration('roam.smartMode') || event.affectsConfiguration('roam.modelTiers')) {
+    if (event.affectsConfiguration('unode.smartMode') || event.affectsConfiguration('unode.modelTiers')) {
       teamViewProvider?.refresh();
     }
     // Keep the LIVE command gate in sync with Settings-UI edits. Without this, changing
-    // roam.commandApproval / roam.allowedCommands in Settings had no effect until a window reload (the
+    // unode.commandApproval / unode.allowedCommands in Settings had no effect until a window reload (the
     // policy only reloaded via the approval-bar dropdown / "Allow for project") — so an emptied allowlist
     // or a switch to "ask" silently didn't take, and commands kept running ungated.
-    if (event.affectsConfiguration('roam.commandApproval') || event.affectsConfiguration('roam.allowedCommands')) {
-      const cfg = vscode.workspace.getConfiguration('roam');
+    if (event.affectsConfiguration('unode.commandApproval') || event.affectsConfiguration('unode.allowedCommands')) {
+      const cfg = vscode.workspace.getConfiguration('unode');
       commandPolicy.reload(cfg.get<CommandApprovalMode>('commandApproval', 'ask'), cfg.get<string[]>('allowedCommands', []));
       outputChannel.info(`[policy] reloaded: commandApproval=${cfg.get('commandApproval', 'ask')}, allowedCommands=${(cfg.get<string[]>('allowedCommands', []) ?? []).length}`);
     }
   }));
 
-  // F4: reload .roam/rules.md when it changes so newly (re)started agents pick up edits.
-  const rulesWatcher = vscode.workspace.createFileSystemWatcher('**/.roam/rules.md');
+  // F4: reload .unode/rules.md when it changes so newly (re)started agents pick up edits.
+  const rulesWatcher = vscode.workspace.createFileSystemWatcher('**/.unode/rules.md');
   const reloadRules = () => {
-    void rulesFile.load().then(() => outputChannel.info('Reloaded .roam/rules.md project memory.'));
+    void rulesFile.load().then(() => outputChannel.info('Reloaded .unode/rules.md project memory.'));
   };
   rulesWatcher.onDidChange(reloadRules);
   rulesWatcher.onDidCreate(reloadRules);
   rulesWatcher.onDidDelete(reloadRules);
   context.subscriptions.push(rulesWatcher);
 
-  const memoryWatcher = vscode.workspace.createFileSystemWatcher('**/.roam/memory/notes.md');
+  const memoryWatcher = vscode.workspace.createFileSystemWatcher('**/.unode/memory/notes.md');
   const reloadMemory = () => {
-    void sharedMemory.load().then(() => outputChannel.info('Reloaded .roam/memory/notes.md shared memory.'));
+    void sharedMemory.load().then(() => outputChannel.info('Reloaded .unode/memory/notes.md shared memory.'));
   };
   memoryWatcher.onDidChange(reloadMemory);
   memoryWatcher.onDidCreate(reloadMemory);
@@ -602,11 +684,11 @@ export async function activate(context: vscode.ExtensionContext) {
       }),
     state: context.workspaceState,
     getApprovals: () => {
-      const cfg = vscode.workspace.getConfiguration('roam');
+      const cfg = vscode.workspace.getConfiguration('unode');
       return { command: cfg.get<string>('commandApproval', 'ask'), write: cfg.get<string>('writeApproval', 'none') };
     },
     setApproval: async (kind, value) => {
-      const cfg = vscode.workspace.getConfiguration('roam');
+      const cfg = vscode.workspace.getConfiguration('unode');
       const key = kind === 'write' ? 'writeApproval' : 'commandApproval';
       await cfg.update(key, value, vscode.ConfigurationTarget.Workspace);
       if (kind === 'command') {
@@ -618,27 +700,27 @@ export async function activate(context: vscode.ExtensionContext) {
     agentStates: () => orchestrationProgress.agentStates(),
     filesByAgent: dashboardFilesByAgent,
     worktreeReview: async () =>
-      vscode.workspace.getConfiguration('roam').get<string>('concurrencyStrategy', 'optimistic') === 'worktree'
+      vscode.workspace.getConfiguration('unode').get<string>('concurrencyStrategy', 'optimistic') === 'worktree'
         ? gatherWorktreeReview()
         : undefined,
     recentTaskCount: () => context.globalState.get<number>('roam.dashboard.recentTaskCount', 5),
-    concurrencyMode: () => vscode.workspace.getConfiguration('roam').get<string>('concurrencyStrategy', 'optimistic'),
+    concurrencyMode: () => vscode.workspace.getConfiguration('unode').get<string>('concurrencyStrategy', 'optimistic'),
   });
   // Live-refresh the open dashboard when a task's token usage is recorded, so "Latest tasks" stays current.
   sessionManager.on('session.taskTokens', () => { void refreshDashboardPanel(); });
 
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider('roam.teamPanel', teamViewProvider),
-    vscode.window.registerWebviewViewProvider('roam.messageLog', messageLogProvider),
-    vscode.window.registerWebviewViewProvider('roam.activityPanel', messageLogProvider),
-    vscode.window.registerWebviewViewProvider('roam.chat', chatViewProvider),
+    vscode.window.registerWebviewViewProvider('unode.teamPanel', teamViewProvider),
+    vscode.window.registerWebviewViewProvider('unode.messageLog', messageLogProvider),
+    vscode.window.registerWebviewViewProvider('unode.activityPanel', messageLogProvider),
+    vscode.window.registerWebviewViewProvider('unode.chat', chatViewProvider),
     chatViewProvider,
     outputChannel
   );
 
   // @roam Chat-panel participant — ADDITIVE (the sidebar views above are untouched; both run at once).
   // The handler routes the goal to the crew's PM (or first agent) on UnodeAi's OWN backend, streaming
-  // the run into the chat panel. Toggle live via roam.chatParticipant.enabled.
+  // the run into the chat panel. Toggle live via unode.chatParticipant.enabled.
   const runCrewGoal = async (
     prompt: string,
     onText: (md: string) => void,
@@ -674,29 +756,29 @@ export async function activate(context: vscode.ExtensionContext) {
       sessionManager.off('session.stream', onStream);
     }
   };
-  let roamChatParticipant: vscode.Disposable | undefined;
+  let unodeChatParticipant: vscode.Disposable | undefined;
   const syncRoamChatParticipant = () => {
-    const enabled = vscode.workspace.getConfiguration('roam').get<boolean>('chatParticipant.enabled', true);
-    if (enabled && !roamChatParticipant) {
+    const enabled = vscode.workspace.getConfiguration('unode').get<boolean>('chatParticipant.enabled', true);
+    if (enabled && !unodeChatParticipant) {
       try {
-        roamChatParticipant = registerRoamChatParticipant(context.extensionUri, { runGoal: runCrewGoal });
-        context.subscriptions.push(roamChatParticipant);
+        unodeChatParticipant = registerUnodeChatParticipant(context.extensionUri, { runGoal: runCrewGoal });
+        context.subscriptions.push(unodeChatParticipant);
       } catch (err) {
         outputChannel.warn(`[chat] @roam participant registration failed: ${String(err)}`);
       }
-    } else if (!enabled && roamChatParticipant) {
-      roamChatParticipant.dispose();
-      roamChatParticipant = undefined;
+    } else if (!enabled && unodeChatParticipant) {
+      unodeChatParticipant.dispose();
+      unodeChatParticipant = undefined;
     }
   };
   syncRoamChatParticipant();
 
   // Always-visible anchor: shows the build version no matter which sidebar sections are collapsed
-  // (a collapsed Team section folds away its title-bar version), and one click reopens the Roam sidebar.
-  roamVersion = String(context.extension.packageJSON.version ?? '');
+  // (a collapsed Team section folds away its title-bar version), and one click reopens the Unode sidebar.
+  unodeVersion = String(context.extension.packageJSON.version ?? '');
   statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-  statusBarItem.text = `$(organization) Roam v${roamVersion}`;
-  statusBarItem.command = 'roam.showTeamPanel';
+  statusBarItem.text = `$(organization) Unode v${unodeVersion}`;
+  statusBarItem.command = 'unode.showTeamPanel';
   statusBarItem.tooltip = 'UnodeAi — show the Team panel';
   statusBarItem.show();
   context.subscriptions.push(statusBarItem);
@@ -708,10 +790,10 @@ export async function activate(context: vscode.ExtensionContext) {
   messageBus.importMessages(persistence.loadMessages());
 
   registerCommands(context);
-  void vscode.commands.executeCommand('setContext', 'roam.teamCompact', false);
+  void vscode.commands.executeCommand('setContext', 'unode.teamCompact', false);
   syncConcurrencyContext(); // pick the right concurrency icon for the Team title bar
   await migrateToProviderSplit(context); // 0.9.0: Roam→weroam default; existing roam agents+key kept on Unode
-  await correctStaleRoamBaseUrl(); // every launch (idempotent): heal a stale persisted roam.baseUrl=unode
+  await correctStaleRoamBaseUrl(); // every launch (idempotent): heal a stale persisted unode.baseUrl=unode
   await restoreRoster();
   syncSoloContext(); // solid ⚡ only while the current chat target is Solo
   // L3: resume any workflows that were mid-flight before the reload (agents now exist).
@@ -719,7 +801,7 @@ export async function activate(context: vscode.ExtensionContext) {
   updateStatusBar();
 
   if (sessionManager.getAll().length === 0) {
-    const onboardingTimer = setTimeout(() => void vscode.commands.executeCommand('roam.onboarding'), 1000);
+    const onboardingTimer = setTimeout(() => void vscode.commands.executeCommand('unode.onboarding'), 1000);
     context.subscriptions.push({ dispose: () => clearTimeout(onboardingTimer) });
   }
 
@@ -789,7 +871,7 @@ function withOpenAICompatBaseUrl(config: AgentConfig): AgentConfig {
 
 /** Read the current Smart Mode config from settings (F3). */
 function readSmartMode(): SmartModeConfig {
-  const cfg = vscode.workspace.getConfiguration('roam');
+  const cfg = vscode.workspace.getConfiguration('unode');
   return {
     enabled: cfg.get<boolean>('smartMode.enabled', false),
     defaultTier: cfg.get<ModelTier>('smartMode.defaultTier', 'standard'),
@@ -804,7 +886,7 @@ interface TaskModelSelection {
 }
 
 /** Smart Mode (F3): pick the model and optional tier params for this task.
- *  Reuses the existing tier tables (DEFAULT_MODEL_TIERS + roam.modelTiers override). */
+ *  Reuses the existing tier tables (DEFAULT_MODEL_TIERS + unode.modelTiers override). */
 function resolveTaskModelSelection(config: AgentConfig, msg: Message): TaskModelSelection | undefined {
   if ((config.backend ?? defaultBackendKind(config)) !== 'openai-compat') {
     return undefined;
@@ -817,10 +899,10 @@ function resolveTaskModelSelection(config: AgentConfig, msg: Message): TaskModel
     config.tier ?? sm.roleTiers?.[config.role] ?? ROLE_TEMPLATES[config.role]?.tier ?? sm.defaultTier;
   const tier = selectTier(msg, sm, roleDefault);
   const tiers = resolveModelTiers(
-    vscode.workspace.getConfiguration('roam').get<Partial<Record<ModelTier, Record<string, string>>>>('modelTiers', {})
+    vscode.workspace.getConfiguration('unode').get<Partial<Record<ModelTier, Record<string, string>>>>('modelTiers', {})
   );
   const rawTierParams = vscode.workspace
-    .getConfiguration('roam')
+    .getConfiguration('unode')
     .get<Partial<Record<ModelTier, AgentModelParams>>>('modelTierParams', {});
   const modelParams = sanitizeParams(rawTierParams[tier]);
   const providerModel = tiers[tier]?.[config.provider.providerId];
@@ -838,7 +920,7 @@ function resolveTaskModelSelection(config: AgentConfig, msg: Message): TaskModel
 
 function economyModelFor(config: AgentConfig): string {
   const tiers = resolveModelTiers(
-    vscode.workspace.getConfiguration('roam').get<Partial<Record<ModelTier, Record<string, string>>>>('modelTiers', {})
+    vscode.workspace.getConfiguration('unode').get<Partial<Record<ModelTier, Record<string, string>>>>('modelTiers', {})
   );
   // Exact economy model for THIS provider, else the agent's own configured model (always valid for its
   // provider). Never fall back to another provider's id — that would 400 (e.g. during summarization).
@@ -858,7 +940,7 @@ function smartModeCardPreview(
   const tier: ModelTier =
     (config.tier as ModelTier | undefined) ?? sm.roleTiers?.[config.role] ?? ROLE_TEMPLATES[config.role]?.tier ?? sm.defaultTier;
   const tiers = resolveModelTiers(
-    vscode.workspace.getConfiguration('roam').get<Partial<Record<ModelTier, Record<string, string>>>>('modelTiers', {})
+    vscode.workspace.getConfiguration('unode').get<Partial<Record<ModelTier, Record<string, string>>>>('modelTiers', {})
   );
   return { tier, model: tiers[tier]?.[config.provider.providerId] };
 }
@@ -914,19 +996,19 @@ function openAIBaseUrlFor(config: AgentConfig, env: NodeJS.ProcessEnv): string {
 function getConfiguredRoamBaseUrl(): string {
   // Blank, or a stale persisted unode/OpenAI value, must NOT win — canonicalRoamBaseUrl collapses those to
   // the weroam gateway so Roam agents (and the Roam pricing fetch) never land on Unode/OpenAI.
-  return canonicalRoamBaseUrl(vscode.workspace.getConfiguration('roam').get<string>('baseUrl', DEFAULT_PROVIDER_CONFIGS.roam.baseUrl));
+  return canonicalRoamBaseUrl(vscode.workspace.getConfiguration('unode').get<string>('baseUrl', DEFAULT_PROVIDER_CONFIGS.roam.baseUrl));
 }
 
-/** The configured Unode base URL (roam.unodeBaseUrl), used by unode agents/runtime/pricing. */
+/** The configured Unode base URL (unode.unodeBaseUrl), used by unode agents/runtime/pricing. */
 function getConfiguredUnodeBaseUrl(): string {
-  const configured = vscode.workspace.getConfiguration('roam').get<string>('unodeBaseUrl', UNODE_DEFAULT_BASE_URL);
+  const configured = vscode.workspace.getConfiguration('unode').get<string>('unodeBaseUrl', UNODE_DEFAULT_BASE_URL);
   return configured && configured.trim() ? configured.trim() : UNODE_DEFAULT_BASE_URL;
 }
 
 /** Build the run_command gatekeeper from settings. Default-deny: execution is off unless the
  *  user picks a mode and (for allowlist) lists trusted command prefixes. */
 function makeCommandPolicy(): CommandPolicy {
-  const cfg = vscode.workspace.getConfiguration('roam');
+  const cfg = vscode.workspace.getConfiguration('unode');
   const mode = cfg.get<CommandApprovalMode>('commandApproval', 'ask');
   const allowlist = cfg.get<string[]>('allowedCommands', []);
   return new CommandPolicy(mode, allowlist);
@@ -935,7 +1017,7 @@ function makeCommandPolicy(): CommandPolicy {
 /**
  * v0.2.8 'ask' mode: prompt the user before an agent runs a not-yet-allowlisted command, modeled on
  * Claude Code's Yes / Yes-for-this-project / No. "Always allow" appends the command's TEMPLATE
- * (e.g. "git status", not bare "git") to roam.allowedCommands and reloads the live policy, so future
+ * (e.g. "git status", not bare "git") to unode.allowedCommands and reloads the live policy, so future
  * matching commands run without a prompt — without green-lighting dangerous siblings.
  */
 /**
@@ -957,7 +1039,7 @@ async function maybePromptTeamRules(): Promise<void> {
     SKIP
   );
   if (choice === SET) {
-    await vscode.commands.executeCommand('roam.editTeamRules');
+    await vscode.commands.executeCommand('unode.editTeamRules');
   }
 }
 
@@ -987,7 +1069,7 @@ async function applyCommandApproval(action: string, note: string | undefined, te
     return { allow: true };
   }
   if (action === 'project') {
-    const cfg = vscode.workspace.getConfiguration('roam');
+    const cfg = vscode.workspace.getConfiguration('unode');
     const list = cfg.get<string[]>('allowedCommands', []);
     if (template && !list.map((p) => p.toLowerCase()).includes(template)) {
       await cfg.update('allowedCommands', [...list, template], vscode.ConfigurationTarget.Workspace);
@@ -1067,10 +1149,10 @@ async function requestWriteApproval(req: { path: string; before: string | null; 
   return action === 'once' ? 'once' : 'deny';
 }
 
-/** Drive `roam.soloActive` so the Team toolbar shows the solid ⚡ only while Solo is selected. */
+/** Drive `unode.soloActive` so the Team toolbar shows the solid ⚡ only while Solo is selected. */
 function syncSoloContext(): void {
   const selectedIsSolo = isSoloSelected();
-  void vscode.commands.executeCommand('setContext', 'roam.soloActive', selectedIsSolo);
+  void vscode.commands.executeCommand('setContext', 'unode.soloActive', selectedIsSolo);
   teamViewProvider?.refresh();
 }
 
@@ -1125,17 +1207,17 @@ async function warnWorktreeNeedsGit(): Promise<void> {
     INIT
   );
   if (choice === OPTIMISTIC) {
-    await vscode.workspace.getConfiguration('roam').update('concurrencyStrategy', 'optimistic', vscode.ConfigurationTarget.Workspace);
+    await vscode.workspace.getConfiguration('unode').update('concurrencyStrategy', 'optimistic', vscode.ConfigurationTarget.Workspace);
     void vscode.window.showInformationMessage('UnodeAi: switched to Optimistic concurrency (shared workspace). It applies to each agent’s next turn.');
   } else if (choice === INIT) {
     await initGitRepoForWorktree();
   }
 }
 
-/** Sync the `roam.worktreeMode` context key so the Team title bar shows the right concurrency icon. */
+/** Sync the `unode.worktreeMode` context key so the Team title bar shows the right concurrency icon. */
 function syncConcurrencyContext(): void {
-  const worktree = vscode.workspace.getConfiguration('roam').get<string>('concurrencyStrategy', 'optimistic') === 'worktree';
-  void vscode.commands.executeCommand('setContext', 'roam.worktreeMode', worktree);
+  const worktree = vscode.workspace.getConfiguration('unode').get<string>('concurrencyStrategy', 'optimistic') === 'worktree';
+  void vscode.commands.executeCommand('setContext', 'unode.worktreeMode', worktree);
 }
 
 /** Cheap "is the workspace a git repo" check (no WorktreeManager instance needed) for the mode toggle. */
@@ -1158,7 +1240,7 @@ async function initGitRepoForWorktree(): Promise<void> {
   });
   try {
     const gi = path.join(root, '.gitignore');
-    try { await fs.access(gi); } catch { await fs.writeFile(gi, 'node_modules/\n.roam/\n.env\n*.log\n', 'utf8'); }
+    try { await fs.access(gi); } catch { await fs.writeFile(gi, 'node_modules/\n.unode/\n.env\n*.log\n', 'utf8'); }
     await runGit(['init']);
     void vscode.window.showInformationMessage(
       `UnodeAi: initialized a git repo at ${root} and added a .gitignore. Review the changes, then commit ` +
@@ -1173,7 +1255,7 @@ async function initGitRepoForWorktree(): Promise<void> {
 
 function makeWorktreeCoordinator(): WorktreeCoordinator {
   const root = workspaceRoot();
-  const cfg = () => vscode.workspace.getConfiguration('roam');
+  const cfg = () => vscode.workspace.getConfiguration('unode');
   return new WorktreeCoordinator({
     manager: new WorktreeManager(root),
     orchestrator: new GitMergeOrchestrator(root),
@@ -1210,17 +1292,22 @@ function makeWorktreeCoordinator(): WorktreeCoordinator {
 /** Spawn the verify command in a worktree and capture exit code + combined output (sanitized env).
  *  Has a HARD timeout: the gate is serialized with merges/finalize, so a watch-mode or input-waiting
  *  verify command must never hang the chain — on timeout we kill it and report failure (exit non-zero),
- *  which blocks the (unverifiable) merge and tells the agent. Timeout via roam.worktree.verifyTimeoutSeconds. */
+ *  which blocks the (unverifiable) merge and tells the agent. Timeout via unode.worktree.verifyTimeoutSeconds. */
 const verifyCommandRunner = (command: string, cwd: string): Promise<{ code: number | null; output: string }> =>
   new Promise((resolve) => {
-    const seconds = Math.max(10, vscode.workspace.getConfiguration('roam').get<number>('worktree.verifyTimeoutSeconds', 300));
+    // Workspace Trust gate: the verify command is a shell command, so it must not run in an untrusted workspace.
+    if (!vscode.workspace.isTrusted) {
+      resolve({ code: null, output: 'Verification skipped: this workspace is not trusted, so the verify command was not run. Trust the workspace (Workspace Trust) to enable it.' });
+      return;
+    }
+    const seconds = Math.max(10, vscode.workspace.getConfiguration('unode').get<number>('worktree.verifyTimeoutSeconds', 300));
     const proc = cpSpawn(command, { cwd, shell: true, stdio: ['ignore', 'pipe', 'pipe'], env: sanitizedCommandEnv() });
     let output = '';
     let settled = false;
     const done = (r: { code: number | null; output: string }) => { if (settled) { return; } settled = true; clearTimeout(timer); resolve(r); };
     const timer = setTimeout(() => {
       killProcessTree(proc); // Windows: kill the whole tree, not just cmd.exe (audit N2)
-      done({ code: null, output: `${output}\n[verify timed out after ${seconds}s — ensure roam.verifyCommand exits (e.g. not a watch mode) and doesn't wait for input]` });
+      done({ code: null, output: `${output}\n[verify timed out after ${seconds}s — ensure unode.verifyCommand exits (e.g. not a watch mode) and doesn't wait for input]` });
     }, seconds * 1000);
     proc.stdout?.on('data', (d) => (output += d.toString()));
     proc.stderr?.on('data', (d) => (output += d.toString()));
@@ -1279,7 +1366,7 @@ async function refreshWorktreePanel(): Promise<void> {
 /** Snapshot of the crew's worktree/integration state for the review panel. */
 async function gatherWorktreeReview(): Promise<WorktreeReview> {
   const base = (await runGitInRoot(['rev-parse', '--abbrev-ref', 'HEAD'])).stdout.trim() || 'HEAD';
-  const integrationBranch = 'roam/integration';
+  const integrationBranch = 'unode/integration';
   const lanes: WorktreeReview['lanes'] = [];
   for (const wt of worktreeCoordinator?.active() ?? []) {
     const v = wt.agentId ? worktreeCoordinator?.verification(wt.agentId) : undefined;
@@ -1328,7 +1415,7 @@ function canDelegate(config: AgentConfig): boolean {
 
 function makeCoordinatorTeamTools(config: AgentConfig): TeamTools {
   return new TeamTools(config.id, makeTeamView(), messageBus, {
-    verifyCommand: vscode.workspace.getConfiguration('roam').get<string>('verifyCommand', ''),
+    verifyCommand: vscode.workspace.getConfiguration('unode').get<string>('verifyCommand', ''),
     cwd: config.workingDirectory || vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || process.cwd(),
     commandPolicy,
     onCommandBlocked: notifyCommandBlocked,
@@ -1568,32 +1655,32 @@ async function fetchMentionUrl(url: string): Promise<{ ok: boolean; text: string
   return { ok: !text.startsWith('Error:'), text };
 }
 
-/** B2: when a command is blocked by roam.commandApproval, warn the user (not just the LLM) — with a
+/** B2: when a command is blocked by unode.commandApproval, warn the user (not just the LLM) — with a
  *  shortcut to the setting. Debounced so a PM looping run_checks can't spam toasts. */
 let lastCommandBlockedToast = 0;
 function notifyCommandBlocked(reason: string): void {
-  outputChannel.warn(`Command blocked by roam.commandApproval: ${reason}`);
+  outputChannel.warn(`Command blocked by unode.commandApproval: ${reason}`);
   const now = Date.now();
   if (now - lastCommandBlockedToast < 30_000) {
     return;
   }
   lastCommandBlockedToast = now;
   void vscode.window
-    .showWarningMessage(`Command blocked by roam.commandApproval: ${reason}`, 'Open Settings')
+    .showWarningMessage(`Command blocked by unode.commandApproval: ${reason}`, 'Open Settings')
     .then((choice) => {
       if (choice === 'Open Settings') {
-        void vscode.commands.executeCommand('workbench.action.openSettings', 'roam.commandApproval');
+        void vscode.commands.executeCommand('workbench.action.openSettings', 'unode.commandApproval');
       }
     });
 }
 
 /**
- * Objective gate check for gated workflows (P2): run the user-configured roam.verifyCommand over the
+ * Objective gate check for gated workflows (P2): run the user-configured unode.verifyCommand over the
  * whole project. Empty command = no objective gate (passes). The command is user-set (not LLM-chosen),
  * so it bypasses CommandPolicy by design — same trust model as TeamTools.run_checks.
  */
 async function runVerifyChecks(): Promise<{ ok: boolean; output?: string; blocked?: boolean }> {
-  const cmd = vscode.workspace.getConfiguration('roam').get<string>('verifyCommand', '').trim();
+  const cmd = vscode.workspace.getConfiguration('unode').get<string>('verifyCommand', '').trim();
   if (!cmd) {
     return { ok: true };
   }
@@ -1601,7 +1688,7 @@ async function runVerifyChecks(): Promise<{ ok: boolean; output?: string; blocke
   if (!verdict.allowed) {
     // blocked = config problem (execution disabled / not allowlisted), not a quality failure.
     notifyCommandBlocked(verdict.reason ?? 'command execution is disabled');
-    return { ok: false, blocked: true, output: `Verification command blocked by roam.commandApproval: ${verdict.reason}` };
+    return { ok: false, blocked: true, output: `Verification command blocked by unode.commandApproval: ${verdict.reason}` };
   }
   // Reuse the worktree verify runner: cp.spawn + a hard timeout that SIGKILLs the child. The old
   // cp.exec({timeout}) did NOT reliably kill the child on Windows and lost output on timeout, so a
@@ -1623,7 +1710,7 @@ function grantedServerConfigs(grants: McpServerGrant[], opts: { approvedOnly?: b
       }
       out.push(resolveServerPlaceholders(cfg, { WORKDIR: workspaceRoot() }));
     } else {
-      outputChannel.warn(`Agent references MCP server "${g.serverId}" which is not in .roam/team.json mcpServers.`);
+      outputChannel.warn(`Agent references MCP server "${g.serverId}" which is not in .unode/team.json mcpServers.`);
     }
   }
   return out;
@@ -1699,6 +1786,14 @@ let lastMcpMountDetail = '';
 
 async function mountMcpServer(cfg: MCPServerConfig): Promise<'mounted' | 'skipped' | 'error'> {
   lastMcpMountDetail = '';
+  // Workspace Trust gate: MCP servers can spawn local processes (stdio: npx/uvx/docker) or reach the
+  // network (remote), so never mount them in an untrusted workspace. They are (re)mounted when the user
+  // grants trust (see the onDidGrantWorkspaceTrust handler in activate).
+  if (!vscode.workspace.isTrusted) {
+    lastMcpMountDetail = `"${cfg.name}" is disabled until you trust this workspace (Workspace Trust).`;
+    outputChannel.warn(`MCP server "${cfg.id}" not mounted: workspace is not trusted.`);
+    return 'skipped';
+  }
   // Pre-flight: a stdio server whose command isn't installed would just close the connection — catch it
   // here with a clear, actionable message instead of the opaque MCP "Connection closed" error.
   if (cfg.transport === 'stdio' && cfg.command && !mcpCommandOnPath(cfg.command)) {
@@ -1754,10 +1849,10 @@ function settingsPanelRefresh(): void {
 /** A ConfigStore adapter over the roam.* configuration section (for SettingsBridge). */
 function makeConfigStore(): ConfigStore {
   return {
-    get: <T>(key: string, fallback: T) => vscode.workspace.getConfiguration('roam').get<T>(key, fallback),
+    get: <T>(key: string, fallback: T) => vscode.workspace.getConfiguration('unode').get<T>(key, fallback),
     update: (key: string, value: unknown) =>
       Promise.resolve(
-        vscode.workspace.getConfiguration('roam').update(key, value, vscode.ConfigurationTarget.Workspace)
+        vscode.workspace.getConfiguration('unode').update(key, value, vscode.ConfigurationTarget.Workspace)
       ),
   };
 }
@@ -1925,14 +2020,14 @@ async function _pickModel(
 }
 
 /**
- * Refresh the cost table from live gateway /api/pricing endpoints — the Roam gateway (roam.baseUrl)
- * plus any new-api-compatible gateways the user lists in roam.pricingSources. Called on activation,
+ * Refresh the cost table from live gateway /api/pricing endpoints — the Roam gateway (unode.baseUrl)
+ * plus any new-api-compatible gateways the user lists in unode.pricingSources. Called on activation,
  * daily, and when the model picker opens, so prices refresh online and stay current. Best-effort:
  * a failing source logs and leaves the static/override table in place.
  */
 async function refreshPrices(): Promise<void> {
   if (!livePrices || !pricing) { return; }
-  const cfg = vscode.workspace.getConfiguration('roam');
+  const cfg = vscode.workspace.getConfiguration('unode');
   const roamBase = getConfiguredRoamBaseUrl();   // sanitized: never the old unode URL (no Roam-key leak)
   const unodeBase = getConfiguredUnodeBaseUrl();
   const priceGroup = cfg.get<string>('priceGroup', '').trim() || undefined;
@@ -1971,26 +2066,26 @@ async function refreshPrices(): Promise<void> {
  *    they keep running unchanged. New roam agents (weroam, no base) are unaffected because this runs once.
  */
 /**
- * Cosmetic, idempotent, runs EVERY launch (not flag-guarded): reset a persisted roam.baseUrl that still
+ * Cosmetic, idempotent, runs EVERY launch (not flag-guarded): reset a persisted unode.baseUrl that still
  * points at the old unode endpoint to the weroam default, so the Settings UI matches reality. Runtime/pricing
  * are already safe via canonicalRoamBaseUrl — this just fixes what's stored/shown (covers users who launched
  * 0.9.0 before this landed, whose once-migration flag is already set). A no-op once the value is canonical.
  */
 async function correctStaleRoamBaseUrl(): Promise<void> {
   try {
-    const cfg = vscode.workspace.getConfiguration('roam');
+    const cfg = vscode.workspace.getConfiguration('unode');
     const inspected = cfg.inspect<string>('baseUrl');
     const staleUnode = (v?: string) => !!v && /unodetech\.xyz/i.test(v);
     if (staleUnode(inspected?.workspaceValue)) { await cfg.update('baseUrl', ROAM_DEFAULT_BASE_URL, vscode.ConfigurationTarget.Workspace); }
     if (staleUnode(inspected?.globalValue)) { await cfg.update('baseUrl', ROAM_DEFAULT_BASE_URL, vscode.ConfigurationTarget.Global); }
   } catch (err) {
-    outputChannel.warn(`roam.baseUrl correction skipped: ${String(err)}`);
+    outputChannel.warn(`unode.baseUrl correction skipped: ${String(err)}`);
   }
 }
 
 async function migrateToProviderSplit(context: vscode.ExtensionContext): Promise<void> {
   // The SECRET move is GLOBAL (VS Code SecretStorage is global) → guard it in globalState, once per install.
-  // The AGENT-ROSTER move is PER-WORKSPACE (workspaceState + .roam/team.json) → guard it in workspaceState,
+  // The AGENT-ROSTER move is PER-WORKSPACE (workspaceState + .unode/team.json) → guard it in workspaceState,
   // so a second/older workspace opened later still migrates its own old roam agents (Codex fix). Splitting
   // the two guards prevents the first workspace from consuming a global flag that then skips other rosters.
   const SECRET_FLAG = 'roam.migration.providerSplit.v0_9';
@@ -2062,12 +2157,12 @@ async function restoreRoster(): Promise<void> {
   }
   if (agents.length > 0) {
     outputChannel.info(
-      `Restored ${agents.length} agent(s) from ${lastUsed.length > 0 ? 'last workspace state' : '.roam/team.json'}.`
+      `Restored ${agents.length} agent(s) from ${lastUsed.length > 0 ? 'last workspace state' : '.unode/team.json'}.`
     );
     teamViewProvider?.refresh();
   }
   if (mcpRegistry.size > 0) {
-    outputChannel.info(`Loaded ${mcpRegistry.size} MCP server(s) from .roam/team.json.`);
+    outputChannel.info(`Loaded ${mcpRegistry.size} MCP server(s) from .unode/team.json.`);
     registerReferencedMcpServers();
   }
 }
@@ -2191,7 +2286,7 @@ async function resetWorkspaceStateCommand(): Promise<void> {
   const RESET = 'Reset';
   const RESET_KEYS = 'Reset + clear API keys';
   const choice = await vscode.window.showWarningMessage(
-    'Reset UnodeAi in this workspace? This permanently clears the team roster (including .roam/team.json), all chat history, the message log, saved conversations, workflows, and approved MCP servers for this workspace, then reopens the setup wizard. This cannot be undone.',
+    'Reset UnodeAi in this workspace? This permanently clears the team roster (including .unode/team.json), all chat history, the message log, saved conversations, workflows, and approved MCP servers for this workspace, then reopens the setup wizard. This cannot be undone.',
     { modal: true },
     RESET,
     RESET_KEYS
@@ -2212,7 +2307,7 @@ async function resetWorkspaceStateCommand(): Promise<void> {
   }
 
   await persistence.resetWorkspaceState();
-  // Also drop .roam/team.json — otherwise the now-empty workspaceState would re-seed the cleared
+  // Also drop .unode/team.json — otherwise the now-empty workspaceState would re-seed the cleared
   // roster from it on reload (the "Browser keeps coming back after Reset" bug).
   await persistence.deleteTeamFile();
 
@@ -2276,9 +2371,9 @@ function registerCommands(context: vscode.ExtensionContext) {
   const reg = (cmd: string, handler: (...args: any[]) => any) =>
     context.subscriptions.push(vscode.commands.registerCommand(cmd, handler));
 
-  reg('roam.showTeamPanel', () => vscode.commands.executeCommand('workbench.view.extension.roam'));
+  reg('unode.showTeamPanel', () => vscode.commands.executeCommand('workbench.view.extension.unode'));
 
-  reg('roam.showDashboard', () => guard(async () => {
+  reg('unode.showDashboard', () => guard(async () => {
     if (dashboardPanel) { dashboardPanel.reveal(vscode.ViewColumn.One); await refreshDashboardPanel(); return; }
     const panel = vscode.window.createWebviewPanel(
       'roamDashboard',
@@ -2293,7 +2388,7 @@ function registerCommands(context: vscode.ExtensionContext) {
 
   // "Latest tasks" panel N control (command-URI link from the scripts-disabled dashboard). Clamps to a
   // sane range, persists, and re-renders the open dashboard.
-  reg('roam.setDashboardTaskCount', (n: unknown) => guard(async () => {
+  reg('unode.setDashboardTaskCount', (n: unknown) => guard(async () => {
     const parsed = Math.round(Number(n));
     const count = Number.isFinite(parsed) ? Math.min(50, Math.max(1, parsed)) : 5;
     await context.globalState.update('roam.dashboard.recentTaskCount', count);
@@ -2302,12 +2397,12 @@ function registerCommands(context: vscode.ExtensionContext) {
 
   // Brand icon in the editor title bar (top-right) → open UnodeAi's Mission Control (the Dashboard
   // tab), like the one-click "open in tab" icon Claude/GPT/Kilo place there.
-  reg('roam.openMissionControl', () => vscode.commands.executeCommand('roam.showDashboard'));
+  reg('unode.openMissionControl', () => vscode.commands.executeCommand('unode.showDashboard'));
 
   // Evidence Report: turn the crew's recent run into a skimmable "what happened + was it verified"
   // Markdown doc — the verifier-gate made tangible. Gathers delegations (orchestration tracker),
   // changed files (checkpoints), and runs the project's checks for the verdict.
-  reg('roam.generateEvidenceReport', () => guard(async () => {
+  reg('unode.generateEvidenceReport', () => guard(async () => {
     const summaries = orchestrationProgress.snapshot();
     const agents = summaries.flatMap((s) => s.items.map((it) => ({
       agentName: it.agentName,
@@ -2327,7 +2422,7 @@ function registerCommands(context: vscode.ExtensionContext) {
       void vscode.window.showInformationMessage('UnodeAi: no recent crew activity to report yet — run a task first.');
       return;
     }
-    const cmd = vscode.workspace.getConfiguration('roam').get<string>('verifyCommand', '').trim();
+    const cmd = vscode.workspace.getConfiguration('unode').get<string>('verifyCommand', '').trim();
     let checks: EvidenceChecks | undefined;
     let verified = false;
     let blocked = false;
@@ -2355,17 +2450,17 @@ function registerCommands(context: vscode.ExtensionContext) {
     await vscode.window.showTextDocument(doc, { preview: false });
   }));
 
-  reg('roam.showMessageLog', () => vscode.commands.executeCommand('roam.messageLog.focus'));
+  reg('unode.showMessageLog', () => vscode.commands.executeCommand('unode.messageLog.focus'));
 
   // Team panel compact mode: collapse agents to icon chips to free room for Chat/Messages.
   const setTeamCompact = (compact: boolean) => {
     teamViewProvider?.setCompact(compact);
-    void vscode.commands.executeCommand('setContext', 'roam.teamCompact', compact);
+    void vscode.commands.executeCommand('setContext', 'unode.teamCompact', compact);
   };
-  reg('roam.collapseTeam', () => setTeamCompact(true));
-  reg('roam.expandTeam', () => setTeamCompact(false));
+  reg('unode.collapseTeam', () => setTeamCompact(true));
+  reg('unode.expandTeam', () => setTeamCompact(false));
 
-  reg('roam.exportChat', () => guard(async () => {
+  reg('unode.exportChat', () => guard(async () => {
     const selected = chatViewProvider?.exportSelected();
     if (!selected) {
       vscode.window.showInformationMessage('Select an agent chat first, then export it.');
@@ -2380,7 +2475,7 @@ function registerCommands(context: vscode.ExtensionContext) {
     }
   }));
 
-  reg('roam.importChat', () => guard(async () => {
+  reg('unode.importChat', () => guard(async () => {
     const who = chatViewProvider?.getSelectedAgentName();
     if (!who) {
       vscode.window.showInformationMessage('Select an agent chat first, then import into it.');
@@ -2411,7 +2506,7 @@ function registerCommands(context: vscode.ExtensionContext) {
     }
   }));
 
-  reg('roam.exportMessages', () => guard(async () => {
+  reg('unode.exportMessages', () => guard(async () => {
     const items = messageLogProvider?.exportItems() ?? [];
     const saved = await saveJsonPayload(
       `roam-messages-${timestampForFile()}.json`,
@@ -2422,7 +2517,7 @@ function registerCommands(context: vscode.ExtensionContext) {
     }
   }));
 
-  reg('roam.importMessages', () => guard(async () => {
+  reg('unode.importMessages', () => guard(async () => {
     const raw = await readJsonFromDialog();
     if (raw === undefined) {
       return;
@@ -2449,18 +2544,18 @@ function registerCommands(context: vscode.ExtensionContext) {
     );
   }));
 
-  reg('roam.toggleChatCompact', () => {
+  reg('unode.toggleChatCompact', () => {
     const compact = chatViewProvider?.setCompact();
-    void vscode.commands.executeCommand('setContext', 'roam.chatCompact', compact === true);
+    void vscode.commands.executeCommand('setContext', 'unode.chatCompact', compact === true);
   });
 
-  reg('roam.toggleMessagesCompact', () => {
+  reg('unode.toggleMessagesCompact', () => {
     const compact = messageLogProvider?.setCompact();
-    void vscode.commands.executeCommand('setContext', 'roam.messagesCompact', compact === true);
+    void vscode.commands.executeCommand('setContext', 'unode.messagesCompact', compact === true);
   });
 
   // Clear buttons (view title bars) — with a light confirmation noting the consequences.
-  reg('roam.clearChat', () => guard(async () => {
+  reg('unode.clearChat', () => guard(async () => {
     const who = chatViewProvider?.getSelectedAgentName();
     if (!who) {
       vscode.window.showInformationMessage('Select an agent chat first, then clear it.');
@@ -2476,7 +2571,7 @@ function registerCommands(context: vscode.ExtensionContext) {
       chatViewProvider?.clearSelectedAgent();
     }
   }));
-  reg('roam.archiveChat', () => guard(async () => {
+  reg('unode.archiveChat', () => guard(async () => {
     const who = chatViewProvider?.getSelectedAgentName();
     if (!who) {
       vscode.window.showInformationMessage('Select an agent chat first, then archive it.');
@@ -2491,7 +2586,7 @@ function registerCommands(context: vscode.ExtensionContext) {
       `Archived the chat with ${who}. It's hidden but not deleted — restore it via "UnodeAi: View Archived Chats".`
     );
   }));
-  reg('roam.viewArchivedChats', () => guard(async () => {
+  reg('unode.viewArchivedChats', () => guard(async () => {
     const archives = chatViewProvider?.listArchivedChats() ?? [];
     if (archives.length === 0) {
       vscode.window.showInformationMessage('No archived chats yet. Use the Archive button in the Chat panel to save one.');
@@ -2531,10 +2626,10 @@ function registerCommands(context: vscode.ExtensionContext) {
       vscode.window.showWarningMessage(msg);
       return;
     }
-    void vscode.commands.executeCommand('roam.chat.focus').then(undefined, () => { /* view focus is best-effort */ });
+    void vscode.commands.executeCommand('unode.chat.focus').then(undefined, () => { /* view focus is best-effort */ });
     vscode.window.showInformationMessage(`Restored the archived chat with ${pick.label}.`);
   }));
-  reg('roam.clearMessageLog', () => guard(async () => {
+  reg('unode.clearMessageLog', () => guard(async () => {
     const CLEAR = 'Clear';
     const choice = await vscode.window.showWarningMessage(
       "Clear all team messages? This empties the cross-agent activity feed and its saved history. It can't be undone.",
@@ -2548,26 +2643,26 @@ function registerCommands(context: vscode.ExtensionContext) {
     }
   }));
 
-  reg('roam.startAllAgents', () => guard(async () => {
+  reg('unode.startAllAgents', () => guard(async () => {
     const result = await sessionManager.startAll();
     vscode.window.showInformationMessage('Starting all UnodeAi agents...');
     return result;
   }));
 
-  reg('roam.stopAllAgents', () => guard(async () => {
+  reg('unode.stopAllAgents', () => guard(async () => {
     await sessionManager.stopAll();
     vscode.window.showInformationMessage('All UnodeAi agents stopped');
     return sessionManager.getAll();
   }));
 
-  reg('roam.openAgentBuilder', (agentId?: string) =>
+  reg('unode.openAgentBuilder', (agentId?: string) =>
     AgentBuilderPanel.createOrShow(context.extensionUri, {
       getViewModel: (id) => agentBuilderViewModel(context.extensionUri, id),
       listModels: (providerId, baseUrl) => agentBuilderListModels(providerId, baseUrl),
       save: (payload) => handleAgentBuilderSave(payload, context.extensionUri),
       pickIcon: () => pickAgentBuilderIcon(),
       openSkillLibrary: async () => {
-        const raw = vscode.workspace.getConfiguration('roam').get<string>(
+        const raw = vscode.workspace.getConfiguration('unode').get<string>(
           'marketplace.skillLibraryUrl',
           'https://github.com/weroamxyz/roam-skills'
         );
@@ -2575,15 +2670,15 @@ function registerCommands(context: vscode.ExtensionContext) {
       },
       // Open the MCP Marketplace (its MCP tab) — what users expect from "Browse MCP Marketplace…" in the
       // builder. Installing there registers the server; the builder refreshes its grant list on focus.
-      addMcpServer: async () => { await vscode.commands.executeCommand('roam.openMarketplace', 'mcp'); },
+      addMcpServer: async () => { await vscode.commands.executeCommand('unode.openMarketplace', 'mcp'); },
     }, typeof agentId === 'string' ? agentId : undefined)
   );
 
-  reg('roam.addMcpServer', () => guard(() => guidedAddMcpServer()));
+  reg('unode.addMcpServer', () => guard(() => guidedAddMcpServer()));
 
-  reg('roam.addAgent', () => guard(() => dialogs.showAddAgentDialog(dialogDeps())));
+  reg('unode.addAgent', () => guard(() => dialogs.showAddAgentDialog(dialogDeps())));
   // D1 UI: pick a team preset (software crew or a knowledge-work team) and create it.
-  reg('roam.createTeamPreset', () => guard(async () => {
+  reg('unode.createTeamPreset', () => guard(async () => {
     const result = await dialogs.createTeamFromPreset(dialogDeps());
     if (result.length && context.extensionMode !== vscode.ExtensionMode.Test) {
       void maybePromptTeamRules();
@@ -2591,7 +2686,7 @@ function registerCommands(context: vscode.ExtensionContext) {
     teamViewProvider?.refresh();
     return result;
   }));
-  reg('roam.createDefaultTeam', () => guard(async () => {
+  reg('unode.createDefaultTeam', () => guard(async () => {
     const result = await dialogs.createDefaultTeam(dialogDeps());
     // Prompt for team rules on real user-driven creation only — never in headless e2e (a modal
     // would break the test), and don't block/alter the command's return value (the created agents).
@@ -2612,7 +2707,7 @@ function registerCommands(context: vscode.ExtensionContext) {
       const first = agents[0];
       if (first && first.id !== solo.id) {
         chatViewProvider?.selectAgent(first.id);
-        await vscode.commands.executeCommand('roam.chatWithAgent', first.id);
+        await vscode.commands.executeCommand('unode.chatWithAgent', first.id);
         return first.config;
       }
       return solo.config; // Solo is the first/only agent — stay on it
@@ -2622,36 +2717,36 @@ function registerCommands(context: vscode.ExtensionContext) {
     teamViewProvider?.refresh();
     chatViewProvider?.refresh();
     syncSoloContext();
-    await vscode.commands.executeCommand('roam.chatWithAgent', config.id);
+    await vscode.commands.executeCommand('unode.chatWithAgent', config.id);
     return config;
   });
-  reg('roam.startSolo', soloToggleHandler);
-  reg('roam.startSoloActive', soloToggleHandler); // solid-icon variant shown while a Solo agent exists
-  reg('roam.editTeamRules', () => guard(() => openTeamRulesPanel({
+  reg('unode.startSolo', soloToggleHandler);
+  reg('unode.startSoloActive', soloToggleHandler); // solid-icon variant shown while a Solo agent exists
+  reg('unode.editTeamRules', () => guard(() => openTeamRulesPanel({
     rulesFilePath: rulesFile.path,
     onSaved: () => { void rulesFile.load(); },
   })));
-  reg('roam.agentStart', (id: string) => guard(() => sessionManager.start(id)));
-  reg('roam.agentStop', (id: string) => guard(async () => {
+  reg('unode.agentStart', (id: string) => guard(() => sessionManager.start(id)));
+  reg('unode.agentStop', (id: string) => guard(async () => {
     await sessionManager.stop(id);
     return sessionManager.getAll();
   }));
-  reg('roam.agentRestart', (id: string) => guard(() => sessionManager.restart(id)));
-  reg('roam.agentRemove', (id: string) => guard(async () => { terminalManager.dispose(id); const r = await sessionManager.remove(id); syncSoloContext(); return r; }));
+  reg('unode.agentRestart', (id: string) => guard(() => sessionManager.restart(id)));
+  reg('unode.agentRemove', (id: string) => guard(async () => { terminalManager.dispose(id); const r = await sessionManager.remove(id); syncSoloContext(); return r; }));
   // #13 Phase 2: reveal an agent's command terminal (from the Team panel). Creates one on demand
   // so every agent — even a PM that only delegates — has its own visible terminal thread.
-  reg('roam.showAgentTerminal', (id: string) => terminalManager.reveal(id, `Roam: ${resolveAgentName(id)}`, workspaceRoot()));
+  reg('unode.showAgentTerminal', (id: string) => terminalManager.reveal(id, `Unode: ${resolveAgentName(id)}`, workspaceRoot()));
   // V1 Checkpoints: revert a file an agent edited back to a previous version.
-  reg('roam.restoreCheckpoint', () => guard(() => restoreCheckpointCommand()));
-  reg('roam.showCheckpointDiff', (checkpointId: unknown) => guard(() => showCheckpointDiffCommand(checkpointId)));
-  reg('roam.resetWorkspaceState', () => guard(() => resetWorkspaceStateCommand()));
+  reg('unode.restoreCheckpoint', () => guard(() => restoreCheckpointCommand()));
+  reg('unode.showCheckpointDiff', (checkpointId: unknown) => guard(() => showCheckpointDiffCommand(checkpointId)));
+  reg('unode.resetWorkspaceState', () => guard(() => resetWorkspaceStateCommand()));
 
   // F2: one-click guided command-execution enablement
   context.subscriptions.push(
-    vscode.commands.registerCommand('roam.enableCommands', async () => {
+    vscode.commands.registerCommand('unode.enableCommands', async () => {
       const accepted = await promptCommandApproval(commandPolicy.approvalMode);
       if (accepted) {
-        const cfg = vscode.workspace.getConfiguration('roam');
+        const cfg = vscode.workspace.getConfiguration('unode');
         commandPolicy.reload(
           cfg.get<CommandApprovalMode>('commandApproval', 'ask'),
           cfg.get<string[]>('allowedCommands', [])
@@ -2659,14 +2754,14 @@ function registerCommands(context: vscode.ExtensionContext) {
       }
     })
   );
-  reg('roam.agentEdit', (id: string) => guard(() => dialogs.showEditAgentDialog(dialogDeps(), id)));
-  reg('roam.showAgentOutput', (id: string) => getAgentChannel(id).show());
+  reg('unode.agentEdit', (id: string) => guard(() => dialogs.showEditAgentDialog(dialogDeps(), id)));
+  reg('unode.showAgentOutput', (id: string) => getAgentChannel(id).show());
 
   // Flip the concurrency mode from the Team-panel title-bar icon (or command palette). Switching to Worktree
   // on a non-git folder reuses the same git-init / Optimistic prompt agents hit at runtime. The toolbar shows
-  // one of two icons gated on the roam.worktreeMode context key (set here + on activation + on config change).
-  reg('roam.toggleConcurrencyMode', () => guard(async () => {
-    const cfg = vscode.workspace.getConfiguration('roam');
+  // one of two icons gated on the unode.worktreeMode context key (set here + on activation + on config change).
+  reg('unode.toggleConcurrencyMode', () => guard(async () => {
+    const cfg = vscode.workspace.getConfiguration('unode');
     const next = cfg.get<string>('concurrencyStrategy', 'optimistic') === 'worktree' ? 'optimistic' : 'worktree';
     await cfg.update('concurrencyStrategy', next, vscode.ConfigurationTarget.Workspace);
     syncConcurrencyContext();
@@ -2681,11 +2776,11 @@ function registerCommands(context: vscode.ExtensionContext) {
     }
   }));
   // The two title-bar icons (Optimistic vs Worktree) both just trigger the toggle; the icon shown indicates
-  // the CURRENT mode (see package.json view/title when-clauses on roam.worktreeMode).
-  reg('roam.concurrencyMode.optimistic', () => vscode.commands.executeCommand('roam.toggleConcurrencyMode'));
-  reg('roam.concurrencyMode.worktree', () => vscode.commands.executeCommand('roam.toggleConcurrencyMode'));
+  // the CURRENT mode (see package.json view/title when-clauses on unode.worktreeMode).
+  reg('unode.concurrencyMode.optimistic', () => vscode.commands.executeCommand('unode.toggleConcurrencyMode'));
+  reg('unode.concurrencyMode.worktree', () => vscode.commands.executeCommand('unode.toggleConcurrencyMode'));
 
-  reg('roam.sendMessage', (request?: unknown) => guard(async () => {
+  reg('unode.sendMessage', (request?: unknown) => guard(async () => {
     const agents = sessionManager.getAll();
     if (agents.length === 0) {
       vscode.window.showWarningMessage('No agents configured. Add an agent first.');
@@ -2694,32 +2789,32 @@ function registerCommands(context: vscode.ExtensionContext) {
     return dialogs.showSendMessageDialog(dialogDeps(), agents.map((a) => a.config), request);
   }));
 
-  reg('roam.openChat', () => guard(async () => {
+  reg('unode.openChat', () => guard(async () => {
     if (sessionManager.getAll().length === 0) {
       const pick = await vscode.window.showInformationMessage(
         'No agents yet. Create a team first?', 'Create Team'
       );
       if (pick === 'Create Team') {
-        await vscode.commands.executeCommand('roam.createTeamPreset');
+        await vscode.commands.executeCommand('unode.createTeamPreset');
       }
       if (sessionManager.getAll().length === 0) {
         return;
       }
     }
     chatViewProvider.refresh();
-    await vscode.commands.executeCommand('roam.chat.focus');
+    await vscode.commands.executeCommand('unode.chat.focus');
   }));
 
-  reg('roam.chatWithAgent', (agentId: string) => guard(async () => {
+  reg('unode.chatWithAgent', (agentId: string) => guard(async () => {
     if (typeof agentId === 'string') {
       chatViewProvider.selectAgent(agentId);
       syncSoloContext();
     }
-    await vscode.commands.executeCommand('roam.chat.focus');
+    await vscode.commands.executeCommand('unode.chat.focus');
   }));
 
-  reg('roam.runWorkflow', () => guard(() => dialogs.showRunWorkflowDialog(dialogDeps())));
-  reg('roam.editWorkflow', () => guard(() =>
+  reg('unode.runWorkflow', () => guard(() => dialogs.showRunWorkflowDialog(dialogDeps())));
+  reg('unode.editWorkflow', () => guard(() =>
     WorkflowEditor.createOrShow(context.extensionUri, {
       listWorkflows: () => workflowEngine.listWorkflows(),
       listAgents: () => sessionManager.getAll().map((session) => ({
@@ -2731,9 +2826,9 @@ function registerCommands(context: vscode.ExtensionContext) {
       deleteWorkflow: (id) => workflowEngine.deleteWorkflow(id),
     })
   ));
-  reg('roam.setApiKey', () => guard(() => dialogs.showSetApiKeyDialog(dialogDeps())));
+  reg('unode.setApiKey', () => guard(() => dialogs.showSetApiKeyDialog(dialogDeps())));
 
-  reg('roam.onboarding', (options?: unknown) => guard(async () => {
+  reg('unode.onboarding', (options?: unknown) => guard(async () => {
     if (isOnboardingCompleteRequest(options)) {
       // Programmatic/test completion hook: just set the flag (no UI). The command-execution prompt
       // belongs to the real wizard "Finish" (onboardingDeps().complete()), not this hook.
@@ -2744,14 +2839,14 @@ function registerCommands(context: vscode.ExtensionContext) {
     return true;
   }));
 
-  reg('roam.runDemoTask', (taskId?: string) => guard(() => runDemoTask(taskId)));
+  reg('unode.runDemoTask', (taskId?: string) => guard(() => runDemoTask(taskId)));
 
-  reg('roam.openSettings', () =>
+  reg('unode.openSettings', () =>
     SettingsPanel.createOrShow(context.extensionUri, {
       bridge: settingsBridge,
       promptAndStoreSecret: (secretName) => secrets.promptAndStore(secretName, secretName),
       openTeamFile: () => guard(openTeamFile),
-      resetWorkspace: () => vscode.commands.executeCommand('roam.resetWorkspaceState'),
+      resetWorkspace: () => vscode.commands.executeCommand('unode.resetWorkspaceState'),
       listAgentTunings: () =>
         sessionManager.getAll().map((s) => ({
           id: s.config.id,
@@ -2779,7 +2874,7 @@ function registerCommands(context: vscode.ExtensionContext) {
       getSmartMode: () => {
         const sm = readSmartMode();
         const tiers = resolveModelTiers(
-          vscode.workspace.getConfiguration('roam').get<Partial<Record<ModelTier, Record<string, string>>>>('modelTiers', {})
+          vscode.workspace.getConfiguration('unode').get<Partial<Record<ModelTier, Record<string, string>>>>('modelTiers', {})
         );
         const providerIds = Array.from(new Set([
           ...Object.keys(tiers.premium),
@@ -2814,8 +2909,8 @@ function registerCommands(context: vscode.ExtensionContext) {
             break;
           }
           case 'modelTierCell': {
-            // Store only deltas in roam.modelTiers so future default changes still flow through.
-            const raw = vscode.workspace.getConfiguration('roam').get<Record<string, Record<string, string>>>('modelTiers', {});
+            // Store only deltas in unode.modelTiers so future default changes still flow through.
+            const raw = vscode.workspace.getConfiguration('unode').get<Record<string, Record<string, string>>>('modelTiers', {});
             const next: Record<string, Record<string, string>> = { ...raw, [patch.tier]: { ...(raw[patch.tier] ?? {}) } };
             if (patch.value) {
               next[patch.tier][patch.provider] = patch.value;
@@ -2847,13 +2942,13 @@ function registerCommands(context: vscode.ExtensionContext) {
         if (!base) { return undefined; }
         const info = await balanceService.fetchBalance(base, apiKey);
         if (!info) { return undefined; }
-        const thresholdUsd = vscode.workspace.getConfiguration('roam').get<number>('lowBalanceThresholdUsd', 5);
+        const thresholdUsd = vscode.workspace.getConfiguration('unode').get<number>('lowBalanceThresholdUsd', 5);
         return { ...info, thresholdUsd };
       },
     })
   );
 
-  reg('roam.openMarketplace', (tab?: unknown) =>
+  reg('unode.openMarketplace', (tab?: unknown) =>
     MarketplacePanel.createOrShow(
       context.extensionUri,
       (action) => handleMarketplaceInstall(action, context.extensionUri),
@@ -2863,7 +2958,7 @@ function registerCommands(context: vscode.ExtensionContext) {
 
   // Worktree fan-out: the "approve" action — merge the integration branch (all agents' reviewed work)
   // into your branch and refresh the checkout.
-  reg('roam.worktree.finalize', () => guard(async () => {
+  reg('unode.worktree.finalize', () => guard(async () => {
     if (!worktreeCoordinator) { return; }
     const review = await gatherWorktreeReview();
     const r = await worktreeCoordinator.finalize(review.base);
@@ -2877,7 +2972,7 @@ function registerCommands(context: vscode.ExtensionContext) {
 
   // Worktree fan-out: the review board — each agent's isolation lane + what's staged on integration,
   // with a Finalize → your branch button.
-  reg('roam.openWorktreeReview', () => WorktreePanel.createOrShow(
+  reg('unode.openWorktreeReview', () => WorktreePanel.createOrShow(
     context.extensionUri,
     gatherWorktreeReview,
     async () => {
@@ -2936,7 +3031,7 @@ async function guidedAddMcpServer(): Promise<void> {
   const start = await vscode.window.showQuickPick(
     [
       { label: '$(server) Add with guided form', action: 'guided' as const },
-      { label: '$(json) Open .roam/team.json instead', action: 'open' as const },
+      { label: '$(json) Open .unode/team.json instead', action: 'open' as const },
     ],
     { title: 'Add MCP Server', placeHolder: 'Use the guided form or edit the team file directly' }
   );
@@ -2964,7 +3059,7 @@ async function guidedAddMcpServer(): Promise<void> {
       { label: 'stdio', description: 'Run a local MCP command', transport: 'stdio' as const },
       { label: 'streamable-http', description: 'Connect to an HTTP MCP endpoint', transport: 'streamable-http' as const },
       { label: 'sse', description: 'Connect to an SSE MCP endpoint', transport: 'sse' as const },
-      { label: '$(json) Open .roam/team.json instead', description: 'Edit the raw team file', transport: undefined },
+      { label: '$(json) Open .unode/team.json instead', description: 'Edit the raw team file', transport: undefined },
     ],
     { title: 'Add MCP Server: Transport', placeHolder: 'Choose how UnodeAi connects to this server' }
   );
@@ -3068,14 +3163,14 @@ function userMcpServerId(name: string): string {
   return `user-${slug}-${Date.now().toString(36)}`;
 }
 
-/** Open (creating if needed) the versionable .roam/team.json. */
+/** Open (creating if needed) the versionable .unode/team.json. */
 async function openTeamFile(): Promise<void> {
   const folder = vscode.workspace.workspaceFolders?.[0];
   if (!folder) {
-    vscode.window.showWarningMessage('Open a workspace folder to use .roam/team.json.');
+    vscode.window.showWarningMessage('Open a workspace folder to use .unode/team.json.');
     return;
   }
-  const uri = vscode.Uri.joinPath(folder.uri, '.roam', 'team.json');
+  const uri = vscode.Uri.joinPath(folder.uri, '.unode', 'team.json');
   try {
     await vscode.workspace.fs.stat(uri);
   } catch {
@@ -3107,19 +3202,19 @@ function onboardingDeps(context: vscode.ExtensionContext) {
     },
     createQuickStartTeam: async () => {
       // D1: the Team door now offers a preset picker (software crew or a knowledge-work team).
-      await vscode.commands.executeCommand('roam.createTeamPreset');
+      await vscode.commands.executeCommand('unode.createTeamPreset');
     },
     createSolo: async () => {
-      await vscode.commands.executeCommand('roam.startSolo');
+      await vscode.commands.executeCommand('unode.startSolo');
     },
     createCustomAgent: async () => {
-      await vscode.commands.executeCommand('roam.addAgent');
+      await vscode.commands.executeCommand('unode.addAgent');
     },
     runDemoTask,
     complete: async () => {
       await context.workspaceState.update('roam.onboardingComplete', true);
       // When the user finishes the real wizard, offer to enable command execution (F2).
-      await vscode.commands.executeCommand('roam.enableCommands');
+      await vscode.commands.executeCommand('unode.enableCommands');
     },
     openCommand: async (command: string) => {
       await vscode.commands.executeCommand(command);
@@ -3158,7 +3253,7 @@ async function runDemoTask(taskId?: string): Promise<void> {
       'No agents yet. Run the Setup Wizard first?', 'Run Setup Wizard'
     );
     if (choice === 'Run Setup Wizard') {
-      await vscode.commands.executeCommand('roam.onboarding');
+      await vscode.commands.executeCommand('unode.onboarding');
     }
     return;
   }
@@ -3169,7 +3264,7 @@ async function runDemoTask(taskId?: string): Promise<void> {
       'No Project Manager found. Create a team?', 'Create Team'
     );
     if (choice === 'Create Team') {
-      await vscode.commands.executeCommand('roam.createTeamPreset');
+      await vscode.commands.executeCommand('unode.createTeamPreset');
       pm = sessionManager.getAll().find((s) => s.config.role === 'pm');
     }
   }
@@ -3248,9 +3343,9 @@ async function loadMarketplaceCatalog(extensionUri: vscode.Uri): Promise<Marketp
     }
   };
   const bundled: RawCatalog = { agents: await read('agents'), mcp: await read('mcp'), skills: await read('skills') };
-  const cfg = vscode.workspace.getConfiguration('roam');
+  const cfg = vscode.workspace.getConfiguration('unode');
   const url = cfg.get<string>('marketplace.catalogUrl', '').trim();
-  const hosted = cfg.get<boolean>('marketplace.fetchCatalog', true) && url
+  const hosted = cfg.get<boolean>('marketplace.fetchCatalog', false) && url
     ? { url, timeoutMs: 5000, verify: { publicKeyPem: ROAM_CATALOG_PUBLIC_KEY_PEM } }
     : undefined;
   cachedMarketplaceCatalog = await resolveCatalog({ bundled, hosted, warn: (m) => outputChannel.warn(`Marketplace: ${m}`) });
@@ -3261,7 +3356,7 @@ async function agentBuilderViewModel(extensionUri: vscode.Uri, agentId?: string)
   const catalog = await loadMarketplaceCatalog(extensionUri);
   const agent = agentId ? sessionManager.get(agentId)?.config : undefined;
   const tiers = resolveModelTiers(
-    vscode.workspace.getConfiguration('roam').get<Partial<Record<ModelTier, Record<string, string>>>>('modelTiers', {})
+    vscode.workspace.getConfiguration('unode').get<Partial<Record<ModelTier, Record<string, string>>>>('modelTiers', {})
   );
   const roles = Object.entries(ROLE_TEMPLATES).map(([id, template]) => ({
     id,
@@ -3321,7 +3416,7 @@ async function agentBuilderViewModel(extensionUri: vscode.Uri, agentId?: string)
     capabilities,
     mcpServers,
     catalog,
-    skillLibraryUrl: vscode.workspace.getConfiguration('roam').get<string>(
+    skillLibraryUrl: vscode.workspace.getConfiguration('unode').get<string>(
       'marketplace.skillLibraryUrl',
       'https://github.com/weroamxyz/roam-skills'
     ),
@@ -3491,7 +3586,7 @@ async function handleAgentBuilderSave(
 /**
  * M4: perform a marketplace install chosen in the panel. Agents reuse the normal add path
  * (AgentConfigBuilder → sessionManager.create, which auto-persists the roster); MCP servers are
- * written to .roam/team.json + mounted through the existing approval gate. Skills land in Phase 3.
+ * written to .unode/team.json + mounted through the existing approval gate. Skills land in Phase 3.
  */
 async function handleMarketplaceInstall(
   action: MarketplaceInstallAction,
@@ -3571,11 +3666,11 @@ async function promptMarketplaceMcpUrl(entry: McpCatalogEntry): Promise<string |
   }).then((value) => value?.trim());
 }
 
-/** Read-modify-write the team MCP registry in .roam/team.json (best-effort; in-memory registry already updated). */
+/** Read-modify-write the team MCP registry in .unode/team.json (best-effort; in-memory registry already updated). */
 async function persistMcpServerToTeamFile(cfg: MCPServerConfig): Promise<void> {
   const folder = vscode.workspace.workspaceFolders?.[0];
   if (!folder) { return; } // no workspace → in-memory registry only (lost on reload)
-  const uri = vscode.Uri.joinPath(folder.uri, '.roam', 'team.json');
+  const uri = vscode.Uri.joinPath(folder.uri, '.unode', 'team.json');
   let doc: { version?: string; members?: unknown[]; mcpServers?: MCPServerConfig[] } = {
     version: '1.0', members: [], mcpServers: [],
   };
@@ -3597,12 +3692,12 @@ function updateStatusBar(): void {
   const total = sessions.length;
 
   // Keep the version in every state (the always-visible anchor); agent count rides alongside it.
-  const v = roamVersion ? ` v${roamVersion}` : '';
+  const v = unodeVersion ? ` v${unodeVersion}` : '';
   if (total === 0) {
-    statusBarItem.text = `$(organization) Roam${v}`;
+    statusBarItem.text = `$(organization) Unode${v}`;
   } else if (active > 0) {
-    statusBarItem.text = `$(pulse) Roam${v} · ${active}/${total}`;
+    statusBarItem.text = `$(pulse) Unode${v} · ${active}/${total}`;
   } else {
-    statusBarItem.text = `$(circle-slash) Roam${v} · ${total}`;
+    statusBarItem.text = `$(circle-slash) Unode${v} · ${total}`;
   }
 }
