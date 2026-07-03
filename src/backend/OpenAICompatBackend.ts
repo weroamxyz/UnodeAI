@@ -259,6 +259,7 @@ export class OpenAICompatBackend implements AgentBackend {
       memoryWriter,
       engine.onOutsideRoot,
       engine.sharedReadRoot,
+      engine.isTrusted,
     );
     this.timeoutMs = net.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     this.maxRetries = net.maxRetries ?? DEFAULT_MAX_RETRIES;

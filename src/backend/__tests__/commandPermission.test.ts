@@ -70,6 +70,21 @@ describe('decideCommandPermission (claude --permission-prompt-tool gate)', () =>
     expect(asked).toBe(false); // never even reaches the approver
   });
 
+  it('denies file-mutating claude tools (Write/Edit/…) in an untrusted workspace', async () => {
+    for (const name of ['Write', 'Edit', 'MultiEdit', 'NotebookEdit']) {
+      const d = await decideCommandPermission(name, { file_path: 'a.ts', content: 'x' }, { isTrusted: false });
+      expect(d.behavior).toBe('deny');
+      expect((d as { message: string }).message).toMatch(/not trusted/i);
+    }
+  });
+
+  it('still allows read-only claude tools (Read/Grep) in an untrusted workspace', async () => {
+    for (const name of ['Read', 'Grep', 'Glob']) {
+      const d = await decideCommandPermission(name, { file_path: 'a.ts' }, { isTrusted: false });
+      expect(d.behavior).toBe('allow');
+    }
+  });
+
   it('leaves gating to the policy when the workspace is trusted (isTrusted: true)', async () => {
     const d = await decideCommandPermission('Bash', { command: 'npm test' }, {
       policy: new CommandPolicy('ask', ['npm test']),

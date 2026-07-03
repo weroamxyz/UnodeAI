@@ -234,6 +234,9 @@ export class WorkspaceTools {
     // fall back to it for paths not present in the agent's own worktree, so every agent can READ the
     // team's merged work while WRITES stay isolated to its own root. Undefined = no overlay.
     private sharedReadRoot?: string,
+    // Workspace Trust: returns false in an untrusted workspace, where writes/edits/deletes are refused
+    // (agent runs read-only). Default = always trusted (keeps tests and non-VS Code callers unchanged).
+    private isTrustedWorkspace: () => boolean = () => true,
   ) {
     this.root = path.resolve(root);
     this.sharedReadRoot = sharedReadRoot ? path.resolve(sharedReadRoot) : undefined;
@@ -565,7 +568,13 @@ export class WorkspaceTools {
     return formatted.join('\n') || '(empty)';
   }
 
+  /** Standard refusal when a mutating tool is used in an untrusted workspace (agent is read-only). */
+  private untrustedWorkspaceRefusal(tool: string): string {
+    return `Blocked: this workspace is not trusted, so ${tool} is disabled (the agent is read-only until you trust the workspace via Workspace Trust). You can still read and analyze files.`;
+  }
+
   private async writeFile(p: string, content: string): Promise<string> {
+    if (!this.isTrustedWorkspace()) { return this.untrustedWorkspaceRefusal('write_file'); }
     const relPath = String(p ?? '');
     if (!this.allowed.has('write')) {
       this.lastResult = {
@@ -659,6 +668,7 @@ export class WorkspaceTools {
    *  full write path (CAS + shrink-guard + approval + checkpoint). Also the alias target for a model's
    *  native Edit/str_replace tool. */
   private async applyEdit(args: Record<string, any>): Promise<string> {
+    if (!this.isTrustedWorkspace()) { return this.untrustedWorkspaceRefusal('apply_edit'); }
     if (!this.allowed.has('write')) {
       this.lastResult = { name: 'apply_edit', kind: 'write', path: String(args.path ?? ''), output: 'Error: write not permitted.' };
       return 'Error: write not permitted.';
@@ -694,6 +704,7 @@ export class WorkspaceTools {
   /** Delete a single file (sandboxed + checkpointed for undo). Destructive, so it goes through the same
    *  write-approval gate as a write. Refuses directories and missing files with a clear message. */
   private async deleteFile(p: string): Promise<string> {
+    if (!this.isTrustedWorkspace()) { return this.untrustedWorkspaceRefusal('delete_file'); }
     const relPath = String(p ?? '');
     if (!this.allowed.has('write')) {
       this.lastResult = { name: 'delete_file', kind: 'write', path: relPath, output: 'Error: write not permitted.' };

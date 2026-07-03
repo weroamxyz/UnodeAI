@@ -403,11 +403,15 @@ export async function activate(context: vscode.ExtensionContext) {
         verifyObligation: engineCfg.get<boolean>('engine.verifyObligation', true),
         completionGate,
         sharedReadRoot: worktreeMode && path.resolve(integrationRoot) !== path.resolve(agentCwd) ? integrationRoot : undefined,
+        isTrusted: () => vscode.workspace.isTrusted, // untrusted workspace → writes/edits/deletes refused
       };
       return new OpenAICompatBackend(runtimeConfig, undefined, team, coordinator, commandPolicy, net, mcp, undefined, approveForAgent, messageBus, commandNormalizer, commandExecutor, recordCheckpoint, writeApprovalAsk, requestWriteApproval, memoryWriter, engine);
     }
-    // Claude agents use claude's NATIVE MCP: translate their granted servers into --mcp-config.
-    const mcpConfig = buildClaudeMcpConfig(grantedServerConfigs(grants, { approvedOnly: true }));
+    // Claude agents use claude's NATIVE MCP: translate their granted servers into --mcp-config. Workspace
+    // Trust: in an untrusted workspace, hand claude NO MCP servers (they spawn processes / reach the network).
+    const mcpConfig = vscode.workspace.isTrusted
+      ? buildClaudeMcpConfig(grantedServerConfigs(grants, { approvedOnly: true }))
+      : undefined;
     // F1: pass resolved params so buildArgs can map reasoning_effort → --effort at spawn.
     const claudeDeps: ClaudeHeadlessBackendDeps = {
       // Command-approval gate: route this Claude agent's shell commands through Roam's CommandPolicy +

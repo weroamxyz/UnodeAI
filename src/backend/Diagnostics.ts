@@ -50,6 +50,9 @@ export interface EngineOptions {
    *  the team's merged work from when a file isn't in its own isolated worktree. Writes always stay in
    *  the agent's own root. Undefined = no overlay (normal single-tree behavior). */
   sharedReadRoot?: string;
+  /** VS Code Workspace Trust check (live). When it returns false, file writes/edits/deletes are refused —
+   *  an untrusted workspace runs the agent read-only. Undefined = always trusted (tests/back-compat). */
+  isTrusted?: () => boolean;
 }
 
 const MAX_DIAG_LINES = 20;

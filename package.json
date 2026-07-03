@@ -2,7 +2,7 @@
   "name": "unodeai",
   "displayName": "UnodeAi — Multi-Model AI Team",
   "description": "Build a team of AI agents in VS Code — chat with each agent (live streaming, tool cards, Plan/Act mode), let a PM delegate across roles, and assign a different model per role. Isolated git worktrees with a verification gate land only work that passes your tests. Visual workflows, MCP tools, cost arbitrage. The Unode gateway serves 50+ leading models at deeply-discounted rates — run a whole crew for less.",
-  "version": "0.9.15",
+  "version": "0.9.16",
   "publisher": "unode",
   "license": "MIT",
   "icon": "images/icon.png",
@@ -39,7 +39,7 @@
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": "limited",
-      "description": "In an untrusted workspace, UnodeAi runs in a read-only, review-only mode: agents can chat, plan, read files, and search, but shell command execution, MCP servers, and the verify command are disabled until you trust the workspace. This prevents workspace-supplied config (e.g. commands or MCP servers in a repo's .unode/team.json or settings) from executing code without your consent.",
+      "description": "In an untrusted workspace, UnodeAi runs read-only: agents can chat, plan, read files, and search, but shell commands, file writes/edits/deletes, MCP servers, and the verify command are all disabled until you trust the workspace. This prevents workspace-supplied config (e.g. commands or MCP servers in a repo's .unode/team.json or settings) from executing code or modifying files without your consent.",
       "restrictedConfigurations": [
         "unode.allowedCommands",
         "unode.commandApproval",

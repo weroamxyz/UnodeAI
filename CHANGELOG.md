@@ -4,13 +4,15 @@ All notable changes to UnodeAi are documented here.
 
 ## [Unreleased]
 
-## [0.9.15] — 2026-07-03 · Workspace Trust + opt-in network
+## [0.9.16] — 2026-07-03 · Workspace Trust + opt-in network
 
 - **Workspace Trust support (`capabilities.untrustedWorkspaces: limited`).** In an untrusted workspace,
-  UnodeAi runs read-only: agents can chat, plan, read, and search, but **shell commands, MCP servers, and
-  the verify command are disabled** until you trust the workspace. Enforced at every execution chokepoint
-  (OpenAI-compat `run_command`, the Claude `--permission-prompt-tool` gate, the verify runner, and MCP
-  mount) and checked live, so granting trust mid-session takes effect immediately and re-mounts MCP servers.
+  UnodeAi runs read-only: agents can chat, plan, read, and search, but **shell commands, file
+  writes/edits/deletes, MCP servers, and the verify command are disabled** until you trust the workspace.
+  Enforced at every mutation/execution chokepoint (OpenAI-compat `run_command` + `write_file`/`apply_edit`/
+  `delete_file`, the Claude `--permission-prompt-tool` gate for both shell and file tools, the verify
+  runner, and MCP mount for both backends) and checked live, so granting trust mid-session takes effect
+  immediately and re-mounts MCP servers.
   Security-sensitive settings (`unode.allowedCommands`, `commandApproval`, `verifyCommand`, `baseUrl`, …)
   are marked `restrictedConfigurations`, so a repo can't inject them. Virtual workspaces are declared
   unsupported (the extension needs a real filesystem + git).

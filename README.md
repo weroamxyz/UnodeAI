@@ -50,6 +50,15 @@ Open **“UnodeAi: Open Settings”**:
 Most "AI agents" ask you to trust them. UnodeAi is **locked down out of the box** and opens up only
 when you say so — the safe defaults *are* the product, not a settings page you have to find:
 
+- **Honors VS Code Workspace Trust.** In an **untrusted** workspace UnodeAi runs **read-only**: agents can
+  chat, plan, read, and search, but shell commands, file writes/edits/deletes, MCP servers, and the verify
+  command are all disabled until *you* trust the workspace — so opening an unfamiliar repo can't execute or
+  modify anything. Security-sensitive settings (allowed commands, verify command, gateway URLs, …) are
+  marked `restrictedConfigurations`, so a repo's own settings can't quietly re-enable them. Virtual
+  workspaces are unsupported (a real filesystem + git are required).
+- **No network by default.** Nothing is fetched from the internet unless you opt in: the marketplace
+  catalog is bundled offline, and `unode.marketplace.fetchCatalog` is **off** by default. The only network
+  calls UnodeAi makes are to the model/gateway provider **you** configure with a key.
 - **Workspace sandbox.** File reads/writes can't escape your project folder; path traversal is blocked.
 - **Commands are off until you allow them.** `unode.commandApproval` defaults to *ask/deny* — an agent
   can't run a shell command without your say-so. Risky writes can require diff approval too.

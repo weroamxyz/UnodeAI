@@ -35,6 +35,10 @@ export interface CommandPermissionDeps {
  *  case-insensitively so a differently-cased shell tool name can't slip past the gate ungated. */
 const SHELL_TOOLS = new Set(['bash']);
 
+/** claude built-in tools that MUTATE the workspace. In an untrusted workspace these are denied (read-only),
+ *  alongside shell tools. Matched case-insensitively so a differently-cased name can't slip past. */
+const WRITE_TOOLS = new Set(['write', 'edit', 'multiedit', 'notebookedit']);
+
 /**
  * Decide whether a claude tool use may proceed. Shell commands go through Roam's CommandPolicy: allowlisted
  * → allow silently; 'ask' → show the approval card; blocked → deny with the reason. Everything else is
@@ -45,7 +49,12 @@ export async function decideCommandPermission(
   input: Record<string, unknown>,
   deps: CommandPermissionDeps
 ): Promise<ClaudePermissionDecision> {
-  if (!SHELL_TOOLS.has(toolName.trim().toLowerCase())) {
+  const tool = toolName.trim().toLowerCase();
+  // Workspace Trust: an untrusted workspace is read-only — deny both shell and file-mutating tools.
+  if (deps.isTrusted === false && (SHELL_TOOLS.has(tool) || WRITE_TOOLS.has(tool))) {
+    return { behavior: 'deny', message: 'This workspace is not trusted, so running commands and modifying files are disabled. Ask the user to trust the workspace (Workspace Trust); you can still read and analyze files.' };
+  }
+  if (!SHELL_TOOLS.has(tool)) {
     return { behavior: 'allow', updatedInput: input };
   }
   const command = typeof input?.command === 'string' ? input.command.trim() : '';
