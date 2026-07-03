@@ -193,6 +193,42 @@ let outputChannel: vscode.LogOutputChannel;
 let statusBarItem: vscode.StatusBarItem;
 let unodeVersion = ''; // set at activate; kept in every status-bar text so the version always shows
 
+// ─── Network egress consent ───────────────────────────────────────────
+// No prompt or code leaves the machine until the user has explicitly approved the destination gateway
+// host. Consent is per-host and persisted (globalState), so each provider is confirmed once.
+let extensionContext: vscode.ExtensionContext | undefined;
+const consentedEgressHosts = new Set<string>();
+const EGRESS_CONSENT_KEY = 'unode.egressConsentHosts';
+
+function hostOf(url: string): string {
+  try { return new URL(url).host; } catch { return ''; }
+}
+
+/** Ask once per gateway host before any model request. Returns false if the user declines (nothing is sent). */
+async function ensureEgressConsent(host: string): Promise<boolean> {
+  if (!host || consentedEgressHosts.has(host)) { return true; }
+  const choice = await vscode.window.showWarningMessage(
+    `UnodeAi is about to send this agent's prompt — and any workspace files it includes — to “${host}” to generate a response.\n\n` +
+    `Your prompts and code go only to the AI provider you configure; UnodeAi has no servers of its own, no telemetry, and no other network destinations.\n\n` +
+    `Allow UnodeAi to contact ${host}?`,
+    { modal: true },
+    'Allow',
+    'Cancel'
+  );
+  if (choice !== 'Allow') { return false; }
+  consentedEgressHosts.add(host);
+  await extensionContext?.globalState.update(EGRESS_CONSENT_KEY, [...consentedEgressHosts]);
+  return true;
+}
+
+/** Egress hook passed to backends. Throws (aborting the request, before anything is sent) if the user declines. */
+async function egressGate(url: string): Promise<void> {
+  const host = hostOf(url);
+  if (!(await ensureEgressConsent(host))) {
+    throw new Error(`Network egress to ${host} was declined — no prompt or code was sent. Approve the provider to use it.`);
+  }
+}
+
 // ─── Activation ───────────────────────────────────────────────────────
 
 /**
@@ -264,6 +300,8 @@ async function migrateRoamWorkspaceDir(): Promise<void> {
 export async function activate(context: vscode.ExtensionContext) {
   outputChannel = vscode.window.createOutputChannel('UnodeAi', { log: true });
   outputChannel.info('UnodeAi activating...');
+  extensionContext = context;
+  for (const h of context.globalState.get<string[]>(EGRESS_CONSENT_KEY, [])) { consentedEgressHosts.add(h); }
   await migrateRoamSettingsToUnode(context); // rebrand: carry legacy roam.* settings into unode.*
   await migrateRoamWorkspaceDir();           // rebrand: move legacy .roam/ workspace data → .unode/
 
@@ -350,7 +388,9 @@ export async function activate(context: vscode.ExtensionContext) {
       // Solo mode (v0.3.0): a single agent has no teammates to spread work across, so give it more
       // tool-loop iterations to finish a whole task itself.
       const isSolo = runtimeConfig.role === 'solo';
-      const net = isSolo ? { maxToolIterations: SOLO_MAX_TOOL_ITERATIONS } : {};
+      const net = isSolo
+        ? { maxToolIterations: SOLO_MAX_TOOL_ITERATIONS, onBeforeEgress: egressGate }
+        : { onBeforeEgress: egressGate };
       // A solo agent has no teammates, so the optimistic "read the file before you overwrite it"
       // guard is pure friction (it can't clobber anyone). Skip it for solo; teams keep it.
       // Worktree fan-out: an isolated agent (workingDirectory under .unode/worktrees/) has its own
@@ -417,6 +457,9 @@ export async function activate(context: vscode.ExtensionContext) {
       // Command-approval gate: route this Claude agent's shell commands through Roam's CommandPolicy +
       // approval card (named for this agent) — unifies "Ask each" across Claude and OpenAI-compat agents.
       commandPermission: { policy: commandPolicy, requestApproval: approveForAgent, isTrusted: () => vscode.workspace.isTrusted },
+      // Egress consent: confirm the destination host once before the claude CLI is spawned (nothing sent
+      // otherwise). Claude agents reach Anthropic via the user's own `claude` CLI config (api.anthropic.com).
+      onBeforeEgress: () => egressGate('https://api.anthropic.com'),
     };
     if (canDelegate(config)) {
       // PM also gets the team bridge so a Claude PM can delegate (list_agents/assign_task/…).
@@ -969,7 +1012,9 @@ async function summarizerChatCompletion(
     body.max_tokens = params.max_tokens;
   }
 
-  const res = await (globalThis as any).fetch(`${openAIBaseUrlFor(config, env)}/chat/completions`, {
+  const summarizerUrl = `${openAIBaseUrlFor(config, env)}/chat/completions`;
+  await egressGate(summarizerUrl); // egress consent — no content sent until the host is approved
+  const res = await (globalThis as any).fetch(summarizerUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

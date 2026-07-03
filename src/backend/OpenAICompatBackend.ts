@@ -73,6 +73,10 @@ export interface BackendNetworkOptions {
   /** Max tool-call iterations in one turn (default 12). Solo mode raises this — a single agent has no
    *  teammates to extend the work across, so it needs more steps to finish a whole task itself. */
   maxToolIterations?: number;
+  /** Egress consent gate: called with the request URL before EVERY outbound model request. If it throws,
+   *  the request is aborted and nothing is sent — used to obtain one-time user consent per gateway host so
+   *  no prompt/code leaves the machine until the user approves the destination. Undefined = no gate. */
+  onBeforeEgress?: (url: string) => Promise<void>;
 }
 
 export interface ChatMessage {
@@ -208,6 +212,8 @@ export class OpenAICompatBackend implements AgentBackend {
   private readonly maxToolIterations: number;
   private readonly fetchFn: FetchFn;
   private readonly streamFetchFn?: StreamFetchFn;
+  /** Egress consent gate (see BackendNetworkOptions.onBeforeEgress). Called before every model request. */
+  private readonly onBeforeEgress?: (url: string) => Promise<void>;
   /** v0.5.2 Execution Engine: post-write diagnostics collector (undefined = disabled). */
   private readonly diagnostics?: DiagnosticsCollector;
   /** v0.5.2 Execution Engine: enforce a (non-silent) verification step when a turn wrote files. */
@@ -265,6 +271,7 @@ export class OpenAICompatBackend implements AgentBackend {
     this.maxRetries = net.maxRetries ?? DEFAULT_MAX_RETRIES;
     this.retryBaseMs = net.retryBaseMs ?? DEFAULT_RETRY_BASE_MS;
     this.maxToolIterations = net.maxToolIterations ?? MAX_TOOL_ITERATIONS;
+    this.onBeforeEgress = net.onBeforeEgress;
     this.tokenCounter = new TokenCounter(config.contextWindowTokens ?? 128_000);
   }
 
@@ -1411,6 +1418,7 @@ export class OpenAICompatBackend implements AgentBackend {
 
   /** A single HTTP attempt, aborted after `timeoutMs`. */
   private async fetchOnce(url: string, body: string): Promise<{ ok: boolean; status: number; text: string }> {
+    if (this.onBeforeEgress) { await this.onBeforeEgress(url); } // egress consent — throws if user declines the host
     const controller = new AbortController();
     this.currentAbortController = controller;
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
@@ -1443,6 +1451,7 @@ export class OpenAICompatBackend implements AgentBackend {
   }
 
   private async fetchStreamOnce(url: string, body: string): Promise<AsyncIterable<Uint8Array>> {
+    if (this.onBeforeEgress) { await this.onBeforeEgress(url); } // egress consent — throws if user declines the host
     if (!this.streamFetchFn) {
       throw new Error('Streaming fetch is not configured.');
     }

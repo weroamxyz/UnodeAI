@@ -134,6 +134,29 @@ describe('OpenAICompatBackend', () => {
     expect(requests[0].messages.at(-1)).toMatchObject({ role: 'user' });
   });
 
+  it('gates network egress: onBeforeEgress runs with the request URL before any fetch, and declining sends nothing', async () => {
+    // Allow: the gate is invoked with the /chat/completions URL, then the request proceeds normally.
+    const allow = scriptedFetch([{ choices: [{ message: { role: 'assistant', content: 'ok' } }], usage: { prompt_tokens: 1, completion_tokens: 1 } }]);
+    const seen: string[] = [];
+    const okBackend = new OpenAICompatBackend(makeConfig(), allow.fetchFn, undefined, undefined, undefined, {
+      retryBaseMs: 0,
+      onBeforeEgress: async (url) => { seen.push(url); },
+    });
+    await runOneTurn(okBackend, 'hi');
+    expect(seen[0]).toContain('/chat/completions');
+    expect(allow.urls.length).toBeGreaterThan(0);
+
+    // Decline: the gate throws → the request is never issued (nothing leaves the machine).
+    const denied = scriptedFetch([{ choices: [{ message: { role: 'assistant', content: 'nope' } }] }]);
+    const denyBackend = new OpenAICompatBackend(makeConfig(), denied.fetchFn, undefined, undefined, undefined, {
+      retryBaseMs: 0,
+      onBeforeEgress: async () => { throw new Error('user declined egress'); },
+    });
+    const events = await runOneTurn(denyBackend, 'hi');
+    expect(denied.urls.length).toBe(0); // no request was sent
+    expect(events.find((e) => e.kind === 'turn_complete')).toMatchObject({ result: { isError: true } });
+  });
+
   // P2: a write-capable worker that ends a turn claiming "already done / no changes needed" WITHOUT
   // having used any tool gets one nudge to read-and-verify before concluding (the stale-memory bug).
   it('nudges a write-capable worker that claims "already done" with no tool calls', async () => {

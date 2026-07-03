@@ -43,6 +43,9 @@ import { projectContextBlock, replaceProjectContextBlock } from '../session/Rule
 const MCP_CONFIG_FILE = '.unode/mcp.json';
 
 export interface ClaudeHeadlessBackendDeps {
+  /** Egress consent gate: called before the `claude` CLI (which contacts Anthropic / the configured
+   *  gateway) is spawned. If it throws, the process is not started and nothing is sent. Undefined = no gate. */
+  onBeforeEgress?: () => Promise<void>;
   localMcpServerFactory?: () => LocalMcpServer;
   teamMcpBridge?: TeamMcpBridge;
   spawn?: typeof nodeSpawn;
@@ -102,6 +105,9 @@ export class ClaudeHeadlessBackend implements AgentBackend {
     if (this.proc) {
       return;
     }
+    // Egress consent: before the claude CLI (which reaches Anthropic / the configured gateway) is spawned,
+    // obtain the user's one-time consent for the destination host. Throws → nothing is spawned or sent.
+    if (this.deps.onBeforeEgress) { await this.deps.onBeforeEgress(); }
 
     const cwd = this.config.workingDirectory || process.cwd();
     const mcpConfig = await this.prepareMcpConfig();

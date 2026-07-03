@@ -4,6 +4,17 @@ All notable changes to UnodeAi are documented here.
 
 ## [Unreleased]
 
+## [0.9.17] — 2026-07-03 · Egress consent — nothing leaves the machine until you approve the destination
+
+- **Per-gateway egress consent.** Before any model request is sent, UnodeAi asks once per destination host
+  ("about to send this agent's prompt and any workspace files it includes to `<host>` — Allow?"). Nothing
+  is transmitted until you approve; the choice is remembered per host. Enforced at every egress point —
+  the OpenAI-compatible request path (`fetchOnce`/`fetchStreamOnce`), the chat summarizer, and before the
+  Claude CLI is spawned — via a new `onBeforeEgress` hook. Declining aborts the turn with nothing sent.
+- **SECURITY.md audit.** Full, verifiable write-up of every network destination, execution surface, secret
+  handling, SSRF protection, Workspace Trust behavior, and what the extension does *not* contain — for
+  security-conscious users and registry reviewers.
+
 ## [0.9.16] — 2026-07-03 · Workspace Trust + opt-in network
 
 - **Workspace Trust support (`capabilities.untrustedWorkspaces: limited`).** In an untrusted workspace,
