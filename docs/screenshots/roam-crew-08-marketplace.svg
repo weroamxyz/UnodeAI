@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-labelledby="title desc">
+  <title id="title">Roam Crew Marketplace panel placeholder</title>
+  <desc id="desc">A placeholder guide image showing the Roam Crew Marketplace with tabs for Agents, MCP, and Skills.</desc>
+  <defs>
+    <style>
+      .bg{fill:#1e1e1e}.panel{fill:#181818;stroke:#333}.card{fill:#252526;stroke:#464646}.tab{fill:#2d2d30}.active{fill:#7c4dff}.btn{fill:#0e639c}.disabled{fill:#343434;stroke:#464646}.text{font-family:Segoe UI,Arial,sans-serif;fill:#d4d4d4}.muted{fill:#a7adb7}.accent{fill:#b392ff}.green{fill:#6bd883}.small{font-size:18px}.mid{font-size:23px}.big{font-size:30px;font-weight:700}.tiny{font-size:15px}
+    </style>
+  </defs>
+  <rect class="bg" width="1280" height="760"/>
+  <rect class="panel" x="86" y="54" width="1108" height="640" rx="10"/>
+  <text class="text big" x="126" y="108">Roam Crew Marketplace</text>
+  <text class="muted small" x="126" y="140">Discover agents, MCP servers, and skills for your team.</text>
+  <g transform="translate(126 176)">
+    <rect class="tab" width="116" height="42" rx="5"/><rect class="active" y="39" width="116" height="3"/><text class="text small" x="31" y="27">Agents</text>
+    <rect class="tab" x="124" width="94" height="42" rx="5"/><text class="muted small" x="152" y="27">MCP</text>
+    <rect class="disabled" x="226" width="102" height="42" rx="5"/><text class="muted small" x="254" y="27">Skills</text>
+  </g>
+  <rect class="card" x="126" y="256" width="312" height="250" rx="8"/>
+  <text class="text mid" x="154" y="296">Senior Developer</text>
+  <text class="muted tiny" x="154" y="326">Implementation-focused coding agent</text>
+  <text class="muted tiny" x="154" y="356">Suggested tier: standard</text>
+  <rect class="btn" x="154" y="428" width="132" height="40" rx="5"/><text class="text tiny" x="188" y="454">Add agent</text>
+  <rect class="card" x="484" y="256" width="312" height="250" rx="8"/>
+  <text class="text mid" x="512" y="296">Code Reviewer</text>
+  <text class="muted tiny" x="512" y="326">Review, risk, and test coverage agent</text>
+  <text class="muted tiny" x="512" y="356">Suggested tier: economy</text>
+  <rect class="btn" x="512" y="428" width="132" height="40" rx="5"/><text class="text tiny" x="546" y="454">Add agent</text>
+  <rect class="card" x="842" y="256" width="312" height="250" rx="8"/>
+  <text class="text mid" x="870" y="296">GitHub MCP</text>
+  <text class="muted tiny" x="870" y="326">Connect external repository tools</text>
+  <text class="green tiny" x="870" y="356">Requires approval before mounting</text>
+  <rect class="btn" x="870" y="428" width="132" height="40" rx="5"/><text class="text tiny" x="901" y="454">Configure</text>
+  <rect class="card" x="126" y="548" width="1028" height="58" rx="8"/>
+  <text class="accent small" x="154" y="584">Placeholder image: replace with real Marketplace capture before publication.</text>
+  <text class="text big" x="126" y="656">8. Browse the Marketplace for agents, MCP entries, and skills</text>
+</svg>

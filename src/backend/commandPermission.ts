@@ -1,0 +1,65 @@
+/*---------------------------------------------------------------------------------------------
+ *  UnodeAi - command permission decider (unify Claude agents with roam.commandApproval)
+ *
+ *  Claude agents run under the `claude` CLI's own --permission-mode, so historically their shell
+ *  commands BYPASSED Roam's commandApproval (no approval card — see the PM verify-deadlock saga).
+ *  claude exposes one hook to fix this: --permission-prompt-tool, an MCP tool claude calls whenever
+ *  a tool use needs permission. This module is the pure decision logic behind that tool: it applies
+ *  the SAME CommandPolicy (+ ask-mode approval card) that OpenAICompatBackend's run_command uses, so
+ *  every agent type honors "Ask each" consistently. Kept vscode-free so it is unit-testable.
+ *--------------------------------------------------------------------------------------------*/
+
+import { CommandPolicy } from './CommandPolicy';
+import { CommandApprover } from './WorkspaceTools';
+
+/** The MCP tool name claude calls for permission. Referenced as mcp__<server>__permission_prompt. */
+export const PERMISSION_TOOL_NAME = 'permission_prompt';
+
+/** claude's --permission-prompt-tool response contract (returned as JSON text from the MCP tool). */
+export type ClaudePermissionDecision =
+  | { behavior: 'allow'; updatedInput: Record<string, unknown> }
+  | { behavior: 'deny'; message: string };
+
+export interface CommandPermissionDeps {
+  /** The same CommandPolicy that gates OpenAI-compat run_command. Absent → allow (no gating configured). */
+  policy?: CommandPolicy;
+  /** 'ask'-mode approver (shows the approval card). Should already be bound to this agent's name. */
+  requestApproval?: CommandApprover;
+}
+
+/** claude built-in tools that execute a shell command (carry it in input.command). Only these are gated;
+ *  file edits/reads/etc. are governed by claude's --permission-mode + Roam's write checkpoints. Matched
+ *  case-insensitively so a differently-cased shell tool name can't slip past the gate ungated. */
+const SHELL_TOOLS = new Set(['bash']);
+
+/**
+ * Decide whether a claude tool use may proceed. Shell commands go through Roam's CommandPolicy: allowlisted
+ * → allow silently; 'ask' → show the approval card; blocked → deny with the reason. Everything else is
+ * allowed unchanged. Returns claude's allow/deny shape.
+ */
+export async function decideCommandPermission(
+  toolName: string,
+  input: Record<string, unknown>,
+  deps: CommandPermissionDeps
+): Promise<ClaudePermissionDecision> {
+  if (!SHELL_TOOLS.has(toolName.trim().toLowerCase())) {
+    return { behavior: 'allow', updatedInput: input };
+  }
+  const command = typeof input?.command === 'string' ? input.command.trim() : '';
+  if (!command) {
+    return { behavior: 'allow', updatedInput: input };
+  }
+  const verdict = deps.policy?.check(command);
+  if (!verdict || verdict.allowed) {
+    return { behavior: 'allow', updatedInput: input };
+  }
+  if (verdict.ask && deps.requestApproval) {
+    const decision = await deps.requestApproval(command);
+    if (decision.allow) {
+      return { behavior: 'allow', updatedInput: input };
+    }
+    const note = decision.note ? ` The user said: "${decision.note}". Adjust or ask them what to do.` : '';
+    return { behavior: 'deny', message: `Command not approved by the user.${note}` };
+  }
+  return { behavior: 'deny', message: `Command blocked by roam.commandApproval: ${verdict.reason ?? 'not allowed'}.` };
+}

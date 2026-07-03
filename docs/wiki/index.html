@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UnodeAi Wiki</title>
+  <meta name="description" content="UnodeAi user wiki for setup, teams, workflows, safety, marketplace, and troubleshooting.">
+  <style>
+    :root {
+      --bg: #f7f8fb;
+      --surface: #ffffff;
+      --ink: #162033;
+      --muted: #5f6b7a;
+      --line: #d8dee8;
+      --brand: #832beb;
+      --brand-dark: #4d1a8c;
+      --blue: #0f6fad;
+      --green: #237a57;
+      --amber: #8a5a00;
+      --code: #f0f3f8;
+      --shadow: 0 10px 30px rgba(22, 32, 51, 0.08);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.55;
+    }
+
+    a { color: var(--brand-dark); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    a:hover { color: var(--brand); }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 24px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(12px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      font-weight: 750;
+      letter-spacing: 0;
+    }
+
+    .mark {
+      display: inline-grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      color: white;
+      background: var(--brand);
+      font-weight: 800;
+    }
+
+    .toplinks {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 290px minmax(0, 1fr);
+      gap: 28px;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 28px 24px 72px;
+    }
+
+    aside {
+      position: sticky;
+      top: 70px;
+      align-self: start;
+      max-height: calc(100vh - 90px);
+      overflow: auto;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    aside h2 {
+      margin: 0 0 10px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    nav a {
+      display: block;
+      padding: 7px 8px;
+      border-radius: 6px;
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    nav a:hover,
+    nav a.active {
+      color: var(--brand-dark);
+      background: #f1e8ff;
+    }
+
+    main {
+      min-width: 0;
+    }
+
+    .hero {
+      padding: 34px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background:
+        linear-gradient(120deg, rgba(131, 43, 235, 0.12), rgba(15, 111, 173, 0.08)),
+        var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--brand-dark);
+      font-size: 13px;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 780px;
+      font-size: 42px;
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 850px;
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 8px 14px;
+      border: 1px solid var(--brand);
+      border-radius: 6px;
+      background: var(--brand);
+      color: #ffffff;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .button.secondary {
+      color: var(--brand-dark);
+      background: #ffffff;
+    }
+
+    section {
+      margin-top: 24px;
+      padding: 26px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 24px;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 22px 0 8px;
+      font-size: 17px;
+      letter-spacing: 0;
+    }
+
+    p { margin: 0 0 12px; }
+    ul, ol { margin: 8px 0 14px 22px; padding: 0; }
+    li { margin: 5px 0; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .tile {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcff;
+    }
+
+    .tile strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f0f3f8;
+      font-weight: 750;
+    }
+
+    code {
+      padding: 2px 5px;
+      border-radius: 5px;
+      background: var(--code);
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 0.92em;
+    }
+
+    pre {
+      overflow: auto;
+      padding: 14px;
+      border-radius: 8px;
+      background: #111827;
+      color: #e5e7eb;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    pre code {
+      padding: 0;
+      background: transparent;
+      color: inherit;
+    }
+
+    .note {
+      padding: 12px 14px;
+      border-left: 4px solid var(--blue);
+      border-radius: 6px;
+      background: #eef7fd;
+      color: #143d57;
+    }
+
+    .warning {
+      padding: 12px 14px;
+      border-left: 4px solid var(--amber);
+      border-radius: 6px;
+      background: #fff7e6;
+      color: #4d3505;
+    }
+
+    .success {
+      padding: 12px 14px;
+      border-left: 4px solid var(--green);
+      border-radius: 6px;
+      background: #edf8f3;
+      color: #174633;
+    }
+
+    .footer {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px 40px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 980px) {
+      .layout {
+        display: block;
+        padding: 18px 16px 50px;
+      }
+
+      aside {
+        position: static;
+        max-height: none;
+        margin-bottom: 18px;
+      }
+
+      .grid { grid-template-columns: 1fr; }
+      h1 { font-size: 32px; }
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .toplinks { flex-wrap: wrap; white-space: normal; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="mark">R</span>
+      <span>UnodeAi Wiki</span>
+    </div>
+    <div class="toplinks">
+      <a href="https://www.weroam.xyz">WeRoam</a>
+      <a href="https://ai.weroam.xyz/pricing?lang=en">Pricing</a>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside>
+      <h2>Contents</h2>
+      <nav id="toc">
+        <a href="#overview">Overview</a>
+        <a href="#quick-start">Quick Start</a>
+        <a href="#teams">Teams and Roles</a>
+        <a href="#chat">Chat, Plan, and Act</a>
+        <a href="#pm">PM Orchestration</a>
+        <a href="#workflows">Workflows</a>
+        <a href="#marketplace">Marketplace</a>
+        <a href="#settings">Settings</a>
+        <a href="#security">Security</a>
+        <a href="#worktrees">Worktrees</a>
+        <a href="#troubleshooting">Troubleshooting</a>
+        <a href="#commands">Command Reference</a>
+        <a href="#embed">Website Hookup</a>
+      </nav>
+    </aside>
+
+    <main>
+      <div class="hero" id="overview">
+        <p class="eyebrow">UnodeAi 0.9.11</p>
+        <h1>Multi-model AI teams inside VS Code.</h1>
+        <p class="lead">UnodeAi gives each agent its own role, model, chat, tools, memory, and safety policy. Use one Solo agent for quick tasks, a PM-led crew for larger work, or workflows for repeatable processes.</p>
+        <div class="actions">
+          <a class="button" href="#quick-start">Start setup</a>
+          <a class="button secondary" href="#commands">View commands</a>
+          <a class="button secondary" href="https://ai.weroam.xyz/pricing?lang=en">Model pricing</a>
+        </div>
+      </div>
+
+      <section id="quick-start">
+        <h2>Quick Start</h2>
+        <ol>
+          <li>Install UnodeAi from the VS Code Marketplace or from a `.vsix` file.</li>
+          <li>Run <code>UnodeAi: Run Setup Wizard</code>.</li>
+          <li>Run <code>UnodeAi: Set Provider API Key</code> and store <code>ROAM_API_KEY</code>.</li>
+          <li>Run <code>UnodeAi: Create or Switch Team</code>.</li>
+          <li>Open <code>UnodeAi: Open Chat with Agent</code> and send a goal to the Project Manager.</li>
+        </ol>
+        <p class="note">The default Roam gateway (weroam) is <code>https://ai.weroam.xyz/v1</code> and uses OpenAI-compatible chat completions.</p>
+      </section>
+
+      <section id="teams">
+        <h2>Teams and Roles</h2>
+        <p>The default software crew is Project Manager, System Architect, Senior Developer, and Reviewer. You can also add QA, DevOps, Technical Writer, Security, Data Engineer, Product Manager, Solo, and knowledge-work specialists.</p>
+        <div class="grid">
+          <div class="tile"><strong>Project Manager</strong>Delegates, tracks todos, runs checks, and coordinates review.</div>
+          <div class="tile"><strong>Architect</strong>Defines contracts, boundaries, and non-overlapping file ownership.</div>
+          <div class="tile"><strong>Senior Developer</strong>Implements focused code changes and tests.</div>
+          <div class="tile"><strong>Reviewer</strong>Inspects work independently and returns PASS or FAIL.</div>
+          <div class="tile"><strong>Solo</strong>One generalist agent for fast direct work.</div>
+          <div class="tile"><strong>Specialists</strong>QA, DevOps, Security, Data, Technical Writer, and business roles.</div>
+        </div>
+        <h3>Build your own agent</h3>
+        <p>Run <code>UnodeAi: Build an Agent</code> to open the <strong>Agent Builder</strong> — a form to create or edit a custom agent (name, a built-in or custom role like <em>CEO</em>, icon, model, system prompt, capability tools, and MCP grants) without touching JSON. Attach up to <strong>5 skill playbooks</strong> from the skill library: market-proven procedures (OWASP review, dependency-risk triage, test-coverage gaps, accessibility audits…) that fold into the agent's instructions under a <code>## Playbooks</code> section, so it arrives knowing how to do the job. The in-app library stays lean; the builder links out to the full skill library for the long tail. Save, and the agent joins your team like any preset.</p>
+      </section>
+
+      <section id="chat">
+        <h2>Chat, Plan, and Act</h2>
+        <p>Every agent has a persistent chat. The Chat panel supports live streaming, Stop, Steer, tool cards, diffs, command output, analysis cards, context usage, todos, approvals, and import/export. <strong>Clear</strong> deletes a transcript; <strong>Archive</strong> hides it without deleting (restore later via <em>View Archived Chats</em>). Agents can also <code>search_files</code> (regex → file:line) and <code>delete_file</code> (sandboxed + checkpointed) so they don't resort to scratch scripts or blocked shell tricks.</p>
+        <table>
+          <thead><tr><th>Mode</th><th>Use it for</th><th>Tool behavior</th></tr></thead>
+          <tbody>
+            <tr><td><code>Plan</code></td><td>Analysis, estimates, design, review, and risk discussion.</td><td>Write, command, delegation, and MCP tools are removed for OpenAI-compatible agents.</td></tr>
+            <tr><td><code>Act</code></td><td>Implementation, edits, checks, and approved tool use.</td><td>Agent can use tools allowed by role, settings, and approvals.</td></tr>
+          </tbody>
+        </table>
+        <h3>@roam in the VS Code Chat panel</h3>
+        <p>UnodeAi also appears in the native VS Code Chat panel as <code>@roam</code> — alongside its own sidebar, both at once. Type <code>@roam &lt;goal&gt;</code> and your crew's PM picks it up, delegates, and streams the run back into the chat, with an <strong>Open in UnodeAi</strong> button for the full team view. It runs on <strong>your UnodeAi agents/models</strong> (not the chat panel's model), so you keep the multi-agent orchestration and cheap-model cost arbitrage. Needs at least one team; toggle with <code>roam.chatParticipant.enabled</code>.</p>
+      </section>
+
+      <section id="pm">
+        <h2>PM Orchestration</h2>
+        <p>Send complex goals to the Project Manager. The PM breaks the work into a live todo list, asks the Architect for contracts when needed, delegates to teammates, collects results, runs checks, and sends work to an independent Reviewer.</p>
+        <pre><code>Goal: Add password reset.
+Scope: API route, email token model, UI form, tests.
+Constraints: Keep the existing auth provider.
+Verification: npm test and npm run build.</code></pre>
+        <p class="success">Best results come from clear scope, explicit constraints, and a configured <code>roam.verifyCommand</code>.</p>
+      </section>
+
+      <section id="workflows">
+        <h2>Workflows</h2>
+        <p>Workflows are deterministic pipelines. Run them with <code>UnodeAi: Run Workflow</code> or edit custom workflows with <code>UnodeAi: Edit Workflow</code>.</p>
+        <table>
+          <thead><tr><th>Workflow</th><th>Pipeline</th></tr></thead>
+          <tbody>
+            <tr><td>Code Review Pipeline</td><td>Senior Developer -> Tester -> Security</td></tr>
+            <tr><td>Feature Implementation</td><td>Architect -> Senior Developer -> QA</td></tr>
+            <tr><td>Bug Fix Pipeline</td><td>Senior Developer -> Tester</td></tr>
+            <tr><td>Documentation Generation</td><td>Senior Developer -> Technical Writer</td></tr>
+            <tr><td>Feature (Gated, cost-optimized)</td><td>Architect -> Developer -> run_checks gate -> QA</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="marketplace">
+        <h2>Marketplace</h2>
+        <p>Open <code>UnodeAi: Open Marketplace</code> to browse curated agents, MCP servers, and skill catalog entries. Bundled catalog files live in the repository under <code>marketplace/</code>.</p>
+        <table>
+          <thead><tr><th>Catalog</th><th>What it adds</th></tr></thead>
+          <tbody>
+            <tr><td>Agents</td><td>Agent presets that can be added to the current team.</td></tr>
+            <tr><td>MCP</td><td>Model Context Protocol servers routed through approval.</td></tr>
+            <tr><td>Skills</td><td>Skill packages for future and hosted catalog expansion.</td></tr>
+          </tbody>
+        </table>
+        <p>If a hosted catalog URL is configured, UnodeAi merges it with the bundled catalog. Hosted fetch failures fall back to bundled entries.</p>
+      </section>
+
+      <section id="settings">
+        <h2>Settings</h2>
+        <p>Open <code>UnodeAi: Open Settings</code> to manage provider status, model tuning, Smart Mode, MCP servers, and native VS Code settings.</p>
+        <table>
+          <thead><tr><th>Setting</th><th>Default</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>roam.defaultProvider</code></td><td><code>roam</code></td><td>Provider for new agents.</td></tr>
+            <tr><td><code>roam.baseUrl</code></td><td><code>https://ai.weroam.xyz/v1</code></td><td>Roam (weroam) OpenAI-compatible gateway.</td></tr>
+            <tr><td><code>roam.maxConcurrentAgents</code></td><td><code>10</code></td><td>Maximum concurrent running agents.</td></tr>
+            <tr><td><code>roam.verifyCommand</code></td><td>empty</td><td>Command the PM runs for whole-project checks.</td></tr>
+            <tr><td><code>roam.commandApproval</code></td><td><code>ask</code></td><td>Controls shell command execution.</td></tr>
+            <tr><td><code>roam.writeApproval</code></td><td><code>none</code></td><td>Controls file write approval.</td></tr>
+            <tr><td><code>roam.smartMode.enabled</code></td><td><code>false</code></td><td>Enables tier-based model selection.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="security">
+        <h2>Security</h2>
+        <ul>
+          <li>Provider keys are stored in VS Code SecretStorage.</li>
+          <li>File access is sandboxed to the workspace or assigned worktree.</li>
+          <li>Command execution is controlled by <code>roam.commandApproval</code>.</li>
+          <li>File writes can require diff approval with <code>roam.writeApproval = ask</code>.</li>
+          <li>MCP servers are default-deny and can require approval before mounting.</li>
+          <li>Plan mode removes high-impact tools for OpenAI-compatible agents.</li>
+          <li><strong>Zero data retention &amp; no telemetry.</strong> UnodeAi itself keeps no copy of your code or prompts and has no analytics, tracking, or phone-home. Chat history, config, and keys stay on your machine; your code is sent only to the model provider you configure. UnodeAi works with any OpenAI-compatible endpoint, so you can point it at a self-hosted / in-VPC model for provable, end-to-end zero-retention.</li>
+        </ul>
+        <p class="warning">Use <code>roam.commandApproval = all</code> only inside a sandbox or disposable environment.</p>
+      </section>
+
+      <section id="worktrees">
+        <h2>Verified worktree fan-out</h2>
+        <p>For larger parallel jobs, set <code>roam.concurrencyStrategy = worktree</code> (requires a git repo with a clean tree). Each eligible agent gets its own isolated git worktree under <code>.roam/worktrees/</code>; when its turn finishes, its work is committed and merged into a Roam integration branch (<code>roam/integration</code>).</p>
+        <p><strong>Only work that passes your checks lands.</strong> Before merging, UnodeAi runs your <code>roam.verifyCommand</code> (build/lint/test) inside that agent's worktree. If it <strong>passes</strong>, the work merges; if it <strong>fails</strong>, the work is held on the agent's own branch and handed back to fix — nothing unverified reaches integration. Neither Cline nor Kilo gate the <em>team</em> merge on verification.</p>
+        <ul>
+          <li>Review with <code>UnodeAi: Crew Worktrees (Review)</code> — each lane shows ✓ verified / ✗ failing / ⚠ unverified, and a lane that passed by <strong>editing the tests</strong> (instead of fixing the code) is flagged for review.</li>
+          <li>Land integration work onto your branch with <code>UnodeAi: Finalize Worktree Merges to Branch</code>.</li>
+          <li>Gate is controlled by <code>roam.worktree.verifyBeforeMerge</code> (on by default) + <code>roam.worktree.verifyTimeoutSeconds</code>; with no <code>roam.verifyCommand</code> there's nothing to gate on and merges proceed.</li>
+          <li>Control parallelism with <code>roam.worktree.maxParallel</code>; leave <code>roam.worktree.autoMerge</code> off when you want manual review.</li>
+        </ul>
+      </section>
+
+      <section id="troubleshooting">
+        <h2>Troubleshooting</h2>
+        <table>
+          <thead><tr><th>Symptom</th><th>Fix</th></tr></thead>
+          <tbody>
+            <tr><td>No API key</td><td>Run <code>UnodeAi: Set Provider API Key</code>.</td></tr>
+            <tr><td>Command blocked</td><td>Check <code>roam.commandApproval</code> and <code>roam.allowedCommands</code>.</td></tr>
+            <tr><td>PM cannot run checks</td><td>Set <code>roam.verifyCommand</code> and approve the command.</td></tr>
+            <tr><td>Model rejects optional params</td><td>Clear unsupported fields such as <code>reasoning_effort</code>.</td></tr>
+            <tr><td>Conflicting edits</td><td>Re-read and retry, or switch larger jobs to worktree mode.</td></tr>
+            <tr><td>Stale workspace state</td><td>Use <code>UnodeAi: Reset Workspace State</code> only when a full reset is intended.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="commands">
+        <h2>Command Reference</h2>
+        <table>
+          <thead><tr><th>Command</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>UnodeAi: Run Setup Wizard</code></td><td>First-run setup.</td></tr>
+            <tr><td><code>UnodeAi: Set Provider API Key</code></td><td>Store a provider secret.</td></tr>
+            <tr><td><code>UnodeAi: Create or Switch Team</code></td><td>Pick or switch a team preset.</td></tr>
+            <tr><td><code>UnodeAi: Add Agent</code></td><td>Add one agent.</td></tr>
+            <tr><td><code>UnodeAi: Solo Agent (toggle)</code></td><td>Toggle Solo mode.</td></tr>
+            <tr><td><code>UnodeAi: Open Chat with Agent</code></td><td>Open agent chat.</td></tr>
+            <tr><td><code>UnodeAi: Send Message to Agent</code></td><td>Send a one-off task.</td></tr>
+            <tr><td><code>UnodeAi: Run Workflow</code></td><td>Run a workflow.</td></tr>
+            <tr><td><code>UnodeAi: Edit Workflow</code></td><td>Edit workflows.</td></tr>
+            <tr><td><code>UnodeAi: Open Marketplace</code></td><td>Browse agents, MCP, and skills.</td></tr>
+            <tr><td><code>UnodeAi: Open Settings</code></td><td>Open settings panel.</td></tr>
+            <tr><td><code>UnodeAi: Show Dashboard</code></td><td>Open dashboard.</td></tr>
+            <tr><td><code>UnodeAi: Edit Team Rules</code></td><td>Edit <code>.roam/rules.md</code>.</td></tr>
+            <tr><td><code>UnodeAi: Crew Worktrees (Review)</code></td><td>Review worktree fan-out state.</td></tr>
+            <tr><td><code>UnodeAi: Finalize Worktree Merges to Branch</code></td><td>Land integration work.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="embed">
+        <h2>Website Hookup</h2>
+        <p>This wiki is a standalone static HTML file. To connect it to <code>www.weroam.xyz</code>, publish this file at a route such as:</p>
+        <pre><code>/roam-crew/wiki</code></pre>
+        <p>For a CMS or app-router site, copy the contents of <code>&lt;main&gt;</code> into the page body and move the CSS variables into the site's theme layer.</p>
+        <p>For a quick embed:</p>
+        <pre><code>&lt;iframe
+  src="/roam-crew/wiki/index.html"
+  title="UnodeAi Wiki"
+  style="width:100%;height:100vh;border:0"&gt;
+&lt;/iframe&gt;</code></pre>
+      </section>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>UnodeAi documentation for version 0.9.11. For live model availability and pricing, use <a href="https://ai.weroam.xyz/pricing?lang=en">Roam pricing</a>.</p>
+  </footer>
+
+  <script>
+    const links = Array.from(document.querySelectorAll('#toc a'));
+    const sections = links
+      .map((link) => document.querySelector(link.getAttribute('href')))
+      .filter(Boolean);
+
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (!visible) return;
+      links.forEach((link) => {
+        link.classList.toggle('active', link.getAttribute('href') === '#' + visible.target.id);
+      });
+    }, { rootMargin: '-20% 0px -65% 0px', threshold: [0.1, 0.25, 0.5] });
+
+    sections.forEach((section) => observer.observe(section));
+  </script>
+</body>
+</html>

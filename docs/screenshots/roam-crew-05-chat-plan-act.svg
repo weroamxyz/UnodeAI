@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-labelledby="title desc">
+  <title id="title">Roam Crew Chat panel with Plan and Act modes</title>
+  <desc id="desc">A chat panel showing agent selection, Plan and Act mode buttons, a transcript, tool cards, and the message composer.</desc>
+  <defs>
+    <style>
+      .bg{fill:#1e1e1e}.panel{fill:#181818;stroke:#333}.card{fill:#252526;stroke:#464646}.card2{fill:#202124;stroke:#555}.active{fill:#0e639c}.plan{fill:#313236;stroke:#7c4dff}.tool{fill:#292d35;stroke:#4d5a72}.user{fill:#11395b}.agent{fill:#263238}.text{font-family:Segoe UI,Arial,sans-serif;fill:#d4d4d4}.muted{fill:#a7adb7}.accent{fill:#b392ff}.green{fill:#6bd883}.small{font-size:18px}.mid{font-size:23px}.big{font-size:30px;font-weight:700}.tiny{font-size:15px}
+    </style>
+  </defs>
+  <rect class="bg" width="1280" height="760"/>
+  <rect class="panel" x="72" y="40" width="1136" height="650" rx="10"/>
+  <text class="text big" x="112" y="92">Chat</text>
+  <rect class="card2" x="112" y="118" width="380" height="46" rx="5"/>
+  <text class="muted small" x="132" y="148">Agent</text><text class="text small" x="232" y="148">Project Manager</text>
+  <rect class="plan" x="520" y="118" width="94" height="46" rx="5"/><text class="accent small" x="548" y="148">Plan</text>
+  <rect class="active" x="626" y="118" width="94" height="46" rx="5"/><text class="text small" x="657" y="148">Act</text>
+  <rect class="card2" x="748" y="118" width="210" height="46" rx="5"/><text class="muted tiny" x="770" y="147">Context: 18% used</text>
+  <rect class="user" x="112" y="202" width="658" height="72" rx="8"/>
+  <text class="text tiny" x="134" y="228">You</text>
+  <text class="text small" x="134" y="255">Add JWT login and have the team verify it.</text>
+  <rect class="agent" x="112" y="296" width="770" height="96" rx="8"/>
+  <text class="text tiny" x="134" y="322">Project Manager</text>
+  <text class="text small" x="134" y="349">I will split this into API design, implementation, and review tasks.</text>
+  <text class="muted tiny" x="134" y="374">Next: assign architect, developer, reviewer.</text>
+  <rect class="tool" x="112" y="414" width="770" height="82" rx="8"/>
+  <circle cx="138" cy="443" r="7" fill="#6bd883"/>
+  <text class="text small" x="158" y="450">assign_task</text>
+  <text class="muted tiny" x="158" y="476">Developer: implement auth middleware and tests</text>
+  <rect class="tool" x="112" y="514" width="770" height="82" rx="8"/>
+  <circle cx="138" cy="543" r="7" fill="#ffd166"/>
+  <text class="text small" x="158" y="550">run_command approval</text>
+  <text class="muted tiny" x="158" y="576">npm test requires approval before execution</text>
+  <rect class="card2" x="112" y="620" width="850" height="46" rx="6"/>
+  <text class="muted small" x="134" y="650">Message the selected agent - @path to attach a file</text>
+  <rect class="active" x="982" y="620" width="92" height="46" rx="6"/>
+  <text class="text small" x="1009" y="650">Send</text>
+  <text class="text big" x="950" y="284">5. Chat with an agent</text>
+  <text class="muted small" x="950" y="326">Plan = analysis only</text>
+  <text class="muted small" x="950" y="354">Act = tools and edits</text>
+  <text class="muted small" x="950" y="382">Tool cards show what happened</text>
+</svg>

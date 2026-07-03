@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+
+      - name: Audit (production deps — fail on a known-vulnerable shipped dependency)
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Package VSIX
+        run: npm run package
+
+  e2e:
+    # VS Code activation E2E against the BUNDLED VSIX we actually ship (single-file esbuild bundle).
+    # Headless via xvfb; vscode-test downloads the VS Code build it needs at runtime.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+
+      - name: Build
+        run: npm run build
+
+      - name: Package bundled VSIX
+        run: npm run package:bundle
+
+      - name: Install xvfb + unzip (headless display + VSIX/zip extraction)
+        run: sudo apt-get update && sudo apt-get install -y xvfb unzip
+
+      - name: Bundled VSIX smoke (activation, commands, panels, onboarding)
+        run: xvfb-run -a npm run smoke:bundle

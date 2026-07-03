@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-labelledby="title desc">
+  <title id="title">Roam Crew Team panel with default crew</title>
+  <desc id="desc">The Team panel showing Project Manager, Architect, Developer, and Reviewer cards with statuses and actions.</desc>
+  <defs>
+    <style>
+      .bg{fill:#1e1e1e}.activity{fill:#252526}.sidebar{fill:#181818;stroke:#333}.card{fill:#252526;stroke:#464646}.pill{fill:#143d20}.idle{fill:#4a3a12}.btn{fill:#303236;stroke:#555}.tag{fill:#3b4252}.text{font-family:Segoe UI,Arial,sans-serif;fill:#d4d4d4}.muted{fill:#a7adb7}.ok{fill:#6bd883}.warn{fill:#ffd166}.small{font-size:17px}.mid{font-size:22px}.big{font-size:30px;font-weight:700}.tiny{font-size:14px}
+    </style>
+  </defs>
+  <rect class="bg" width="1280" height="760"/>
+  <rect class="activity" width="72" height="760"/>
+  <circle cx="36" cy="92" r="18" fill="#7c4dff"/>
+  <text class="text small" x="22" y="99">RC</text>
+  <rect class="sidebar" x="72" y="0" width="510" height="760"/>
+  <text class="text mid" x="96" y="62">Team - v0.6.10</text>
+  <g transform="translate(96 92)">
+    <rect class="card" width="438" height="126" rx="7"/>
+    <text class="text mid" x="18" y="32">Project Manager</text><text class="muted tiny" x="18" y="54">PM</text>
+    <rect class="pill" x="314" y="18" width="96" height="28" rx="14"/><text class="ok tiny" x="337" y="37">running</text>
+    <text class="muted tiny" x="18" y="78">Model: deepseek-v4-pro</text><text class="muted tiny" x="210" y="78">Provider: roam</text>
+    <rect class="tag" x="18" y="91" width="78" height="22" rx="11"/><text class="text tiny" x="33" y="107">planning</text>
+    <rect class="btn" x="120" y="90" width="58" height="24" rx="4"/><text class="text tiny" x="136" y="107">Chat</text>
+    <rect class="btn" x="188" y="90" width="58" height="24" rx="4"/><text class="text tiny" x="204" y="107">Edit</text>
+  </g>
+  <g transform="translate(96 234)">
+    <rect class="card" width="438" height="126" rx="7"/>
+    <text class="text mid" x="18" y="32">Architect</text><text class="muted tiny" x="18" y="54">architect</text>
+    <rect class="idle" x="314" y="18" width="96" height="28" rx="14"/><text class="warn tiny" x="350" y="37">idle</text>
+    <text class="muted tiny" x="18" y="78">Model: deepseek-v4-pro</text><text class="muted tiny" x="210" y="78">Provider: roam</text>
+    <rect class="btn" x="18" y="90" width="58" height="24" rx="4"/><text class="text tiny" x="34" y="107">Stop</text>
+    <rect class="btn" x="86" y="90" width="58" height="24" rx="4"/><text class="text tiny" x="102" y="107">Chat</text>
+    <rect class="btn" x="154" y="90" width="72" height="24" rx="4"/><text class="text tiny" x="173" y="107">Terminal</text>
+  </g>
+  <g transform="translate(96 376)">
+    <rect class="card" width="438" height="126" rx="7"/>
+    <text class="text mid" x="18" y="32">Developer</text><text class="muted tiny" x="18" y="54">developer</text>
+    <rect class="pill" x="314" y="18" width="96" height="28" rx="14"/><text class="ok tiny" x="337" y="37">running</text>
+    <text class="muted tiny" x="18" y="78">Model: deepseek-v4-flash</text><text class="muted tiny" x="220" y="78">Provider: roam</text>
+    <rect class="tag" x="18" y="91" width="98" height="22" rx="11"/><text class="text tiny" x="31" y="107">ctx 18%</text>
+    <rect class="tag" x="126" y="91" width="86" height="22" rx="11"/><text class="text tiny" x="140" y="107">$0.012</text>
+  </g>
+  <g transform="translate(96 518)">
+    <rect class="card" width="438" height="126" rx="7"/>
+    <text class="text mid" x="18" y="32">Reviewer</text><text class="muted tiny" x="18" y="54">reviewer</text>
+    <rect class="idle" x="314" y="18" width="96" height="28" rx="14"/><text class="warn tiny" x="350" y="37">idle</text>
+    <text class="muted tiny" x="18" y="78">Model: deepseek-v4-flash</text><text class="muted tiny" x="220" y="78">Provider: roam</text>
+  </g>
+  <text class="text big" x="642" y="224">4. Created team</text>
+  <text class="muted mid" x="642" y="272">Each agent has a role, model,</text>
+  <text class="muted mid" x="642" y="304">provider, status, and actions.</text>
+  <path d="M622 252h-76" stroke="#7c4dff" stroke-width="4"/>
+  <path d="M546 252l18-12v24z" fill="#7c4dff"/>
+</svg>

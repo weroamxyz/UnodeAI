@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-labelledby="title desc">
+  <title id="title">Roam Crew commands in the VS Code Command Palette</title>
+  <desc id="desc">A VS Code window showing the Command Palette filtered to Roam Crew commands.</desc>
+  <defs>
+    <style>
+      .bg{fill:#1e1e1e}.side{fill:#252526}.bar{fill:#2d2d30}.panel{fill:#202124;stroke:#3c3c3c}.input{fill:#313236;stroke:#7c4dff}.row{fill:#2a2d2e}.row2{fill:#242628}.text{font-family:Segoe UI,Arial,sans-serif;fill:#d4d4d4}.muted{fill:#9da3ad}.accent{fill:#b392ff}.green{fill:#6bd883}.small{font-size:19px}.mid{font-size:24px}.big{font-size:30px;font-weight:700}
+    </style>
+  </defs>
+  <rect class="bg" width="1280" height="760"/>
+  <rect class="side" x="0" y="0" width="76" height="760"/>
+  <rect class="bar" x="76" y="0" width="1204" height="48"/>
+  <text class="text small" x="101" y="31">Explorer</text>
+  <text class="text small" x="230" y="31">Search</text>
+  <text class="text small" x="342" y="31">Source Control</text>
+  <circle cx="38" cy="82" r="16" fill="#7c4dff"/>
+  <text class="text small" x="24" y="89">RC</text>
+  <circle cx="38" cy="145" r="15" fill="#3a3d41"/>
+  <circle cx="38" cy="207" r="15" fill="#3a3d41"/>
+  <rect class="panel" x="238" y="94" width="804" height="520" rx="10"/>
+  <rect class="input" x="276" y="132" width="728" height="58" rx="6"/>
+  <text class="text mid" x="302" y="169">&gt; Roam Crew</text>
+  <rect class="row" x="276" y="216" width="728" height="54" rx="5"/>
+  <text class="text small" x="300" y="250">Roam Crew: Run Setup Wizard</text>
+  <text class="accent small" x="744" y="250">recommended</text>
+  <rect class="row2" x="276" y="278" width="728" height="54" rx="5"/>
+  <text class="text small" x="300" y="312">Roam Crew: Set Provider API Key</text>
+  <rect class="row2" x="276" y="340" width="728" height="54" rx="5"/>
+  <text class="text small" x="300" y="374">Roam Crew: Create or Switch Team</text>
+  <rect class="row2" x="276" y="402" width="728" height="54" rx="5"/>
+  <text class="text small" x="300" y="436">Roam Crew: Open Chat with Agent</text>
+  <rect class="row2" x="276" y="464" width="728" height="54" rx="5"/>
+  <text class="text small" x="300" y="498">Roam Crew: Open Settings</text>
+  <rect x="276" y="544" width="728" height="34" rx="4" fill="#171717"/>
+  <text class="muted small" x="300" y="567">Tip: start from the setup wizard in a new workspace.</text>
+  <text class="text big" x="104" y="696">1. Open Command Palette and search "Roam Crew"</text>
+</svg>

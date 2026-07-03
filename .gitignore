@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+
+# Build output
+out/
+out-e2e/
+
+# Packaged extension
+*.vsix
+
+# Test / coverage / VS Code test runner
+.vscode-test/
+coverage/
+.npm-cache/
+
+# Logs & OS cruft
+*.log
+.DS_Store
+Thumbs.db
+
+# Local editor settings (keep .vscode/ out of the package and repo by default)
+.vscode/
+
+# NOTE: package-lock.json IS tracked (reproducible installs).
+# NOTE: .claude/ (local agent config) is intentionally NOT committed.
+.claude/
+
+# Local runtime / external-tool dirs (created when the extension or other tools run against this repo)
+.roam/
+.codeep/
+tools/
+# Claude-backend MCP bridge config written to the agent cwd (contains a local loopback bridge token);
+# normally cleaned up on teardown, but ignore it so an abnormal-exit leftover can never be committed.
+.roam-mcp.json
+
+# Stray root-level scratch/debug files (e.g. _find_methods.ts, _verify_v0231.txt)
+/_*.ts
+/_*.js
+/_*.txt
+
+# Dogfood/test scratch (e.g. tmp_demo/add.js from agent multi-step tests)
+/tmp_demo/
+/_*/
+/tmp/
+
+# Active-agent scratch (never ship)
+scripts/patch_chatview*.js

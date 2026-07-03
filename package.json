@@ -1,0 +1,970 @@
+{
+  "name": "unodeai",
+  "displayName": "UnodeAi — Multi-Model AI Team",
+  "description": "Build a team of AI agents in VS Code — chat with each agent (live streaming, tool cards, Plan/Act mode), let a PM delegate across roles, and assign a different model per role. Isolated git worktrees with a verification gate land only work that passes your tests. Visual workflows, MCP tools, cost arbitrage. The Unode gateway serves 50+ leading models at deeply-discounted rates — run a whole crew for less.",
+  "version": "0.9.11",
+  "publisher": "unode",
+  "license": "MIT",
+  "icon": "images/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/weroamxyz/UnodeAI"
+  },
+  "homepage": "https://www.unodetech.xyz",
+  "engines": {
+    "vscode": "^1.93.0"
+  },
+  "categories": [
+    "AI",
+    "Chat",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "agentic",
+    "ai agent",
+    "coding agent",
+    "multi-agent",
+    "agents",
+    "ai",
+    "llm",
+    "team",
+    "workflow",
+    "mcp",
+    "unode"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "chatParticipants": [
+      {
+        "id": "roam.crew",
+        "name": "roam",
+        "fullName": "UnodeAi",
+        "description": "Hand a goal to your AI crew — the PM delegates, verifies, and reports back.",
+        "isSticky": true
+      }
+    ],
+    "commands": [
+      {
+        "command": "roam.showTeamPanel",
+        "title": "UnodeAi: Show Team Panel",
+        "icon": "$(organization)"
+      },
+      {
+        "command": "roam.showDashboard",
+        "title": "UnodeAi: Show Dashboard",
+        "icon": "$(dashboard)"
+      },
+      {
+        "command": "roam.openMissionControl",
+        "title": "UnodeAi: Open Mission Control",
+        "icon": {
+          "light": "images/roam-icon.light.svg",
+          "dark": "images/roam-icon.dark.svg"
+        }
+      },
+      {
+        "command": "roam.generateEvidenceReport",
+        "title": "UnodeAi: Generate Evidence Report",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "roam.startAllAgents",
+        "title": "UnodeAi: Start All Agents",
+        "icon": "$(play)"
+      },
+      {
+        "command": "roam.stopAllAgents",
+        "title": "UnodeAi: Stop All Agents",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "roam.addAgent",
+        "title": "UnodeAi: Add Agent",
+        "icon": "$(add)"
+      },
+      {
+        "command": "roam.openAgentBuilder",
+        "title": "UnodeAi: Build an Agent",
+        "icon": "$(person-add)"
+      },
+      {
+        "command": "roam.createDefaultTeam",
+        "title": "UnodeAi: Create Default Team (PM + Architect + Developer + Reviewer)",
+        "icon": "$(organization)"
+      },
+      {
+        "command": "roam.createTeamPreset",
+        "title": "UnodeAi: Create or Switch Team…",
+        "icon": "$(organization)"
+      },
+      {
+        "command": "roam.startSolo",
+        "title": "UnodeAi: Solo Agent (toggle)",
+        "icon": {
+          "light": "images/zap-line.light.svg",
+          "dark": "images/zap-line.dark.svg"
+        }
+      },
+      {
+        "command": "roam.startSoloActive",
+        "title": "UnodeAi: Solo Agent (toggle)",
+        "icon": {
+          "light": "images/zap-solid.light.svg",
+          "dark": "images/zap-solid.dark.svg"
+        }
+      },
+      {
+        "command": "roam.sendMessage",
+        "title": "UnodeAi: Send Message to Agent",
+        "icon": "$(send)"
+      },
+      {
+        "command": "roam.openChat",
+        "title": "UnodeAi: Open Chat with Agent",
+        "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "roam.chatWithAgent",
+        "title": "UnodeAi: Chat with Agent",
+        "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "roam.runWorkflow",
+        "title": "UnodeAi: Run Workflow",
+        "icon": "$(run-all)"
+      },
+      {
+        "command": "roam.editWorkflow",
+        "title": "UnodeAi: Edit Workflow",
+        "icon": "$(type-hierarchy-sub)"
+      },
+      {
+        "command": "roam.onboarding",
+        "title": "UnodeAi: Run Setup Wizard",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "roam.runDemoTask",
+        "title": "UnodeAi: Run Demo Task",
+        "icon": "$(run)"
+      },
+      {
+        "command": "roam.agentStart",
+        "title": "UnodeAi: Start Agent",
+        "icon": "$(play-circle)"
+      },
+      {
+        "command": "roam.agentStop",
+        "title": "UnodeAi: Stop Agent",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "roam.agentRestart",
+        "title": "UnodeAi: Restart Agent",
+        "icon": "$(debug-restart)"
+      },
+      {
+        "command": "roam.agentRemove",
+        "title": "UnodeAi: Remove Agent",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "roam.agentEdit",
+        "title": "UnodeAi: Edit Agent",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "roam.showMessageLog",
+        "title": "UnodeAi: Show Message Log",
+        "icon": "$(output)"
+      },
+      {
+        "command": "roam.clearChat",
+        "title": "UnodeAi: Clear Chat",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "roam.archiveChat",
+        "title": "UnodeAi: Archive Chat",
+        "icon": "$(archive)"
+      },
+      {
+        "command": "roam.viewArchivedChats",
+        "title": "UnodeAi: View Archived Chats",
+        "icon": "$(history)"
+      },
+      {
+        "command": "roam.exportChat",
+        "title": "UnodeAi: Export Chat",
+        "icon": "$(save)"
+      },
+      {
+        "command": "roam.importChat",
+        "title": "UnodeAi: Import Chat",
+        "icon": "$(folder-opened)"
+      },
+      {
+        "command": "roam.toggleChatCompact",
+        "title": "UnodeAi: Compress Chat View",
+        "icon": "$(collapse-all)"
+      },
+      {
+        "command": "roam.clearMessageLog",
+        "title": "UnodeAi: Clear Messages",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "roam.exportMessages",
+        "title": "UnodeAi: Export Messages",
+        "icon": "$(save)"
+      },
+      {
+        "command": "roam.importMessages",
+        "title": "UnodeAi: Import Messages",
+        "icon": "$(folder-opened)"
+      },
+      {
+        "command": "roam.toggleMessagesCompact",
+        "title": "UnodeAi: Compress Messages View",
+        "icon": "$(collapse-all)"
+      },
+      {
+        "command": "roam.collapseTeam",
+        "title": "UnodeAi: Collapse Team to Icons",
+        "icon": "$(collapse-all)"
+      },
+      {
+        "command": "roam.expandTeam",
+        "title": "UnodeAi: Expand Team Cards",
+        "icon": "$(expand-all)"
+      },
+      {
+        "command": "roam.setApiKey",
+        "title": "UnodeAi: Set Provider API Key",
+        "icon": "$(key)"
+      },
+      {
+        "command": "roam.showAgentOutput",
+        "title": "UnodeAi: Show Agent Output",
+        "icon": "$(output)"
+      },
+      {
+        "command": "roam.showAgentTerminal",
+        "title": "UnodeAi: Show Agent Terminal",
+        "icon": "$(terminal)"
+      },
+      {
+        "command": "roam.restoreCheckpoint",
+        "title": "UnodeAi: Restore File Checkpoint…",
+        "icon": "$(history)"
+      },
+      {
+        "command": "roam.showCheckpointDiff",
+        "title": "UnodeAi: Show Checkpoint Diff",
+        "icon": "$(diff)"
+      },
+      {
+        "command": "roam.openSettings",
+        "title": "UnodeAi: Open Settings",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "roam.toggleConcurrencyMode",
+        "title": "UnodeAi: Toggle Concurrency Mode (Optimistic ⇄ Worktree)"
+      },
+      {
+        "command": "roam.concurrencyMode.optimistic",
+        "title": "UnodeAi: Concurrency — Optimistic (click to switch to Worktree)",
+        "icon": "$(files)"
+      },
+      {
+        "command": "roam.concurrencyMode.worktree",
+        "title": "UnodeAi: Concurrency — Worktree (click to switch to Optimistic)",
+        "icon": "$(git-branch)"
+      },
+      {
+        "command": "roam.openMarketplace",
+        "title": "UnodeAi: Open Marketplace",
+        "icon": "$(extensions)"
+      },
+      {
+        "command": "roam.addMcpServer",
+        "title": "UnodeAi: Add MCP Server",
+        "icon": "$(server)"
+      },
+      {
+        "command": "roam.worktree.finalize",
+        "title": "UnodeAi: Finalize Worktree Merges to Branch",
+        "icon": "$(git-merge)"
+      },
+      {
+        "command": "roam.openWorktreeReview",
+        "title": "UnodeAi: Crew Worktrees (Review)",
+        "icon": "$(git-pull-request)"
+      },
+      {
+        "command": "roam.resetWorkspaceState",
+        "title": "UnodeAi: Reset Workspace State"
+      },
+      {
+        "command": "roam.enableCommands",
+        "title": "Enable Safe Commands",
+        "category": "UnodeAi"
+      },
+      {
+        "command": "roam.editTeamRules",
+        "title": "UnodeAi: Edit Team Rules",
+        "icon": "$(law)"
+      },
+      {
+        "command": "roam.setDashboardTaskCount",
+        "title": "UnodeAi: Set Dashboard Recent-Task Count"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "roam",
+          "title": "UnodeAi",
+          "icon": "images/roam-icon.svg"
+        }
+      ],
+      "panel": [
+        {
+          "id": "roamPanel",
+          "title": "UnodeAi Activity",
+          "icon": "$(output)"
+        }
+      ]
+    },
+    "views": {
+      "roam": [
+        {
+          "id": "roam.teamPanel",
+          "name": "Team",
+          "type": "webview",
+          "icon": "images/roam-icon.svg",
+          "contextualTitle": "UnodeAi Team"
+        },
+        {
+          "id": "roam.messageLog",
+          "name": "Messages",
+          "type": "webview",
+          "icon": "$(output)",
+          "contextualTitle": "UnodeAi Messages"
+        },
+        {
+          "id": "roam.chat",
+          "name": "Chat",
+          "type": "webview",
+          "icon": "$(comment-discussion)",
+          "contextualTitle": "UnodeAi Chat"
+        }
+      ],
+      "roamPanel": [
+        {
+          "id": "roam.activityPanel",
+          "name": "Activity",
+          "type": "webview",
+          "icon": "$(output)",
+          "contextualTitle": "UnodeAi Activity"
+        }
+      ]
+    },
+    "menus": {
+      "editor/title": [
+        {
+          "command": "roam.openMissionControl",
+          "group": "navigation@99"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "roam.addAgent",
+          "when": "view == roam.teamPanel",
+          "group": "navigation@1"
+        },
+        {
+          "command": "roam.generateEvidenceReport",
+          "when": "view == roam.teamPanel",
+          "group": "navigation@2.5"
+        },
+        {
+          "command": "roam.openAgentBuilder",
+          "when": "view == roam.teamPanel",
+          "group": "navigation@1.5"
+        },
+        {
+          "command": "roam.concurrencyMode.optimistic",
+          "when": "view == roam.teamPanel && !roam.worktreeMode",
+          "group": "navigation@1.8"
+        },
+        {
+          "command": "roam.concurrencyMode.worktree",
+          "when": "view == roam.teamPanel && roam.worktreeMode",
+          "group": "navigation@1.8"
+        },
+        {
+          "command": "roam.startSolo",
+          "when": "view == roam.teamPanel && !roam.soloActive",
+          "group": "navigation@2"
+        },
+        {
+          "command": "roam.startSoloActive",
+          "when": "view == roam.teamPanel && roam.soloActive",
+          "group": "navigation@2"
+        },
+        {
+          "command": "roam.createTeamPreset",
+          "when": "view == roam.teamPanel",
+          "group": "navigation@3"
+        },
+        {
+          "command": "roam.startAllAgents",
+          "when": "view == roam.teamPanel",
+          "group": "navigation@4"
+        },
+        {
+          "command": "roam.stopAllAgents",
+          "when": "view == roam.teamPanel",
+          "group": "navigation@5"
+        },
+        {
+          "command": "roam.editTeamRules",
+          "when": "view == roam.teamPanel",
+          "group": "navigation@6"
+        },
+        {
+          "command": "roam.restoreCheckpoint",
+          "when": "view == roam.teamPanel",
+          "group": "navigation@7"
+        },
+        {
+          "command": "roam.openMarketplace",
+          "when": "view == roam.teamPanel",
+          "group": "navigation@8"
+        },
+        {
+          "command": "roam.openSettings",
+          "when": "view == roam.teamPanel",
+          "group": "navigation@9"
+        },
+        {
+          "command": "roam.collapseTeam",
+          "when": "view == roam.teamPanel && !roam.teamCompact",
+          "group": "navigation@10"
+        },
+        {
+          "command": "roam.expandTeam",
+          "when": "view == roam.teamPanel && roam.teamCompact",
+          "group": "navigation@10"
+        },
+        {
+          "command": "roam.exportChat",
+          "when": "view == roam.chat",
+          "group": "navigation"
+        },
+        {
+          "command": "roam.importChat",
+          "when": "view == roam.chat",
+          "group": "navigation"
+        },
+        {
+          "command": "roam.toggleChatCompact",
+          "when": "view == roam.chat",
+          "group": "navigation"
+        },
+        {
+          "command": "roam.archiveChat",
+          "when": "view == roam.chat",
+          "group": "navigation"
+        },
+        {
+          "command": "roam.clearChat",
+          "when": "view == roam.chat",
+          "group": "navigation"
+        },
+        {
+          "command": "roam.viewArchivedChats",
+          "when": "view == roam.chat",
+          "group": "1_archive"
+        },
+        {
+          "command": "roam.exportMessages",
+          "when": "view == roam.messageLog",
+          "group": "navigation"
+        },
+        {
+          "command": "roam.importMessages",
+          "when": "view == roam.messageLog",
+          "group": "navigation"
+        },
+        {
+          "command": "roam.toggleMessagesCompact",
+          "when": "view == roam.messageLog",
+          "group": "navigation"
+        },
+        {
+          "command": "roam.clearMessageLog",
+          "when": "view == roam.messageLog",
+          "group": "navigation"
+        },
+        {
+          "command": "roam.exportMessages",
+          "when": "view == roam.activityPanel",
+          "group": "navigation"
+        },
+        {
+          "command": "roam.importMessages",
+          "when": "view == roam.activityPanel",
+          "group": "navigation"
+        },
+        {
+          "command": "roam.toggleMessagesCompact",
+          "when": "view == roam.activityPanel",
+          "group": "navigation"
+        },
+        {
+          "command": "roam.clearMessageLog",
+          "when": "view == roam.activityPanel",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "roam.startSoloActive",
+          "when": "false"
+        },
+        {
+          "command": "roam.setDashboardTaskCount",
+          "when": "false"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "UnodeAi",
+      "properties": {
+        "roam.maxConcurrentAgents": {
+          "type": "number",
+          "default": 10,
+          "minimum": 1,
+          "description": "Maximum number of agents running concurrently. Extra started agents queue and auto-start as slots free up. Raising this takes effect immediately (no reload)."
+        },
+        "roam.logLevel": {
+          "type": "string",
+          "default": "info",
+          "enum": [
+            "debug",
+            "info",
+            "warn",
+            "error"
+          ],
+          "description": "Log level for UnodeAi"
+        },
+        "roam.messageRetentionDays": {
+          "type": "number",
+          "default": 7,
+          "description": "Number of days to retain message history"
+        },
+        "roam.autoSaveInterval": {
+          "type": "number",
+          "default": 60,
+          "description": "Auto-save interval in seconds"
+        },
+        "roam.modelDefaults.temperature": {
+          "type": "number",
+          "default": 0.7,
+          "minimum": 0,
+          "maximum": 2,
+          "description": "Global default sampling temperature for agents that don't set their own (F2). Per-agent modelParams override this. OpenAI-compatible backends only."
+        },
+        "roam.modelDefaults.topP": {
+          "type": "number",
+          "default": 1,
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Global default nucleus-sampling top_p (F2). Per-agent modelParams override this. OpenAI-compatible backends only."
+        },
+        "roam.modelDefaults.maxTokens": {
+          "type": "integer",
+          "default": 4096,
+          "minimum": 1,
+          "description": "Global default max output tokens for agents that don't set their own (F2). Per-agent modelParams override this."
+        },
+        "roam.modelDefaults.reasoningEffort": {
+          "type": "string",
+          "default": "",
+          "enum": [
+            "",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "enumDescriptions": [
+            "Provider default — do not send reasoning_effort (safest; avoids 400s on models that don't support it)",
+            "low",
+            "medium",
+            "high",
+            "xhigh (claude only)",
+            "max (claude only)"
+          ],
+          "description": "Global default reasoning effort (F2). Empty = do NOT send it (recommended — many models/gateways reject reasoning_effort). When set, OpenAI-compatible backends pass it in the request and the claude backend maps it to --effort. Per-agent/role values still apply."
+        },
+        "roam.modelDefaults.stream": {
+          "type": "boolean",
+          "default": true,
+          "description": "Global default for streaming responses where supported (F2). Note: the in-process tool loop currently issues non-streaming requests regardless."
+        },
+        "roam.modelDefaults.responseFormat": {
+          "type": "string",
+          "default": "",
+          "enum": [
+            "",
+            "text",
+            "json_object"
+          ],
+          "enumDescriptions": [
+            "Provider default — do not send response_format",
+            "text",
+            "json_object (force valid JSON output)"
+          ],
+          "description": "Global default response format (F2). Empty = do NOT send it. OpenAI-compatible backends only; per-agent modelParams override this."
+        },
+        "roam.smartMode.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Smart Mode (F3): auto-select a model tier per task instead of pinning one model per agent. Off = each agent uses its configured model."
+        },
+        "roam.smartMode.defaultTier": {
+          "type": "string",
+          "default": "standard",
+          "enum": [
+            "premium",
+            "standard",
+            "economy"
+          ],
+          "description": "Smart Mode default tier when nothing more specific (role override or task hint) matches."
+        },
+        "roam.smartMode.roleTiers": {
+          "type": "object",
+          "default": {},
+          "additionalProperties": {
+            "type": "string",
+            "enum": [
+              "premium",
+              "standard",
+              "economy"
+            ]
+          },
+          "description": "Smart Mode per-role tier override (role → tier), e.g. { \"reviewer\": \"economy\" }. Beats the role template's tier; loses to a per-task hint."
+        },
+        "roam.smartMode.taskTierHints": {
+          "type": "object",
+          "default": {},
+          "additionalProperties": {
+            "type": "string",
+            "enum": [
+              "premium",
+              "standard",
+              "economy"
+            ]
+          },
+          "description": "Smart Mode per-message-type tier hint (message type → tier), e.g. { \"review.request\": \"economy\" }."
+        },
+        "roam.modelTiers": {
+          "type": "object",
+          "default": {},
+          "description": "Override of the built-in tier→model tables (F3): { \"premium\": { \"roam\": \"...\", \"openai\": \"...\" }, ... }. Merged over the defaults per tier; empty = built-in tables."
+        },
+        "roam.modelTierParams": {
+          "type": "object",
+          "default": {},
+          "description": "Optional Smart Mode tier-level model parameters (F2/F3): { \"premium\": { \"reasoning_effort\": \"high\" }, \"economy\": { \"temperature\": 0.2 } }. Agent modelParams still win over these values.",
+          "properties": {
+            "premium": {
+              "type": "object"
+            },
+            "standard": {
+              "type": "object"
+            },
+            "economy": {
+              "type": "object"
+            }
+          },
+          "additionalProperties": false
+        },
+        "roam.defaultProvider": {
+          "type": "string",
+          "default": "roam",
+          "enum": [
+            "roam",
+            "unode",
+            "anthropic",
+            "openai",
+            "google",
+            "ollama",
+            "custom"
+          ],
+          "description": "Default LLM provider for new agents (default: roam = the weroam gateway)"
+        },
+        "roam.baseUrl": {
+          "type": "string",
+          "default": "https://ai.weroam.xyz/v1",
+          "description": "Base URL for the default Roam OpenAI-compatible gateway (weroam; used by agents on the 'roam' provider). Auth is 'Authorization: Bearer <key>'; expects OpenAI-compatible /chat/completions and /models. Browse available models & pricing at https://ai.weroam.xyz/pricing?lang=en"
+        },
+        "roam.unodeBaseUrl": {
+          "type": "string",
+          "default": "https://www.unodetech.xyz/v1",
+          "description": "Base URL for the Unode OpenAI-compatible gateway (used by agents on the 'unode' provider). Unode is a separate gateway from Roam (weroam), with its own API key (UNODE_API_KEY)."
+        },
+        "roam.modelCatalogUrl": {
+          "type": "string",
+          "default": "",
+          "description": "Optional URL of a Roam-hosted model catalog JSON ({ providers: { <id>: { models: [{ id, name, vision, recommendedFor }] } } }). When set, the Add-Agent model picker merges it with the gateway's live /v1/models and the built-in defaults — so available models can be configured remotely without an extension update. Empty = use live /v1/models + built-in defaults only."
+        },
+        "roam.modelPrices": {
+          "type": "object",
+          "default": {},
+          "description": "Override or extend the cost-estimation price table. Keys are model ids (matched by substring), values are { \"input\": <USD per 1M input tokens>, \"output\": <USD per 1M output tokens> }. Manual overrides win over live-fetched prices — use this for platforms that don't expose a new-api /api/pricing endpoint. Example: { \"deepseek-v4-flash\": { \"input\": 0.14, \"output\": 0.28 } }",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "number"
+              },
+              "output": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "roam.pricingSources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Extra new-api-compatible gateway URLs to fetch live model prices from (in addition to roam.baseUrl). Give either the gateway base URL (…/v1) or a full …/api/pricing URL; prices are converted from new-api ratios to USD and refreshed on startup, daily, and when picking a model. For platforms that do NOT expose a new-api /api/pricing endpoint, use roam.modelPrices instead."
+        },
+        "roam.priceGroup": {
+          "type": "string",
+          "default": "",
+          "description": "Your billing group on the Roam gateway, used to apply the right discount (group_ratio) to displayed prices. Empty = auto-detect (use the single group your key can access, else the default group). Set this only if your account has multiple usable groups and prices look wrong."
+        },
+        "roam.lowBalanceThresholdUsd": {
+          "type": "number",
+          "default": 5,
+          "minimum": 0,
+          "description": "Show a low-balance warning in the Providers tab when a gateway account's remaining credit falls below this many USD. The balance is read live from each provider's billing endpoint using its stored key (new-api gateways like Roam/Unode; providers without a readable balance endpoint simply show nothing). Uncapped accounts show 'Unlimited' and never warn. Set to 0 to disable the warning (the balance still shows)."
+        },
+        "roam.concurrencyStrategy": {
+          "type": "string",
+          "default": "optimistic",
+          "enum": [
+            "optimistic",
+            "worktree"
+          ],
+          "enumDescriptions": [
+            "No locks: agents work in parallel; a write is rejected if a teammate changed the file since you read it (re-read and retry). Best for small/medium teams.",
+            "Each eligible agent works in its own git worktree (true isolation); on turn completion its work is VERIFIED (roam.verifyCommand) and only merged into a roam/integration branch if it passes — failing work is held on the agent's branch and handed back to fix. Requires a git repo with a clean tree. Review per-lane status and land it with 'Finalize Worktree Merges'."
+          ],
+          "description": "How UnodeAi prevents agents from clobbering each other's file edits."
+        },
+        "roam.verifyCommand": {
+          "type": "string",
+          "default": "",
+          "description": "Command the Project Manager's run_checks tool runs to build/type-check/test the whole project (e.g. 'npm run build' or 'npx tsc --noEmit'). The only reliable detector of cross-file breakage. Empty = disabled."
+        },
+        "roam.gate.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Verifier-as-gate: before a PM (coordinator) can report a goal done on the shared tree, run the objective project checks (roam.verifyCommand). If they fail, the PM is sent back to fix it (bounded retries → escalate to a stronger/different teammate → hand off to you), so it can't claim done while the build/tests are red. Requires roam.verifyCommand to be set. Worktree mode already gates at merge, so this applies only to the normal optimistic mode. OpenAI-compatible coordinators only."
+        },
+        "roam.gate.maxSelfRetries": {
+          "type": "number",
+          "default": 2,
+          "minimum": 0,
+          "description": "Verifier-as-gate: how many same-target fix cycles the PM gets when checks fail, before the gate escalates to a stronger/different teammate. Lower = hand off to you sooner."
+        },
+        "roam.gate.maxRedelegations": {
+          "type": "number",
+          "default": 1,
+          "minimum": 0,
+          "description": "Verifier-as-gate: how many escalated (stronger-model / reassigned) fix cycles follow the self-retries before the gate stops and hands the still-failing task back to you. The gate can never loop forever — once this budget is spent it always hands off."
+        },
+        "roam.commandApproval": {
+          "type": "string",
+          "default": "ask",
+          "enum": [
+            "none",
+            "ask",
+            "allowlist",
+            "all"
+          ],
+          "enumDescriptions": [
+            "Agents cannot run shell commands at all (most secure).",
+            "Prompt before each not-yet-allowed command: Allow once / Allow this session / Allow for project (whitelists it) / Deny with a note to the agent. Approved commands run automatically next time (recommended, default).",
+            "Agents may only run commands matching roam.allowedCommands, with no shell chaining.",
+            "Agents may run any shell command except a few catastrophic patterns (DANGEROUS — only in a sandbox/VM)."
+          ],
+          "description": "Controls the run_command tool and PM run_checks. Defaults to 'ask' — you approve each not-yet-allowed command (once / this session / this project) or deny it with a note. 'allowlist' uses a fixed prefix list; 'none' disables command execution entirely. Catastrophic patterns are always blocked."
+        },
+        "roam.allowedCommands": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "git status",
+            "git diff",
+            "git log",
+            "git show",
+            "npm ls",
+            "npm audit",
+            "npm test",
+            "npm run test",
+            "npm run build",
+            "npm run compile",
+            "npm run lint",
+            "npm run typecheck",
+            "pnpm test",
+            "yarn test",
+            "npx tsc",
+            "npx eslint",
+            "npx prettier",
+            "npx vitest",
+            "tsc",
+            "eslint",
+            "prettier",
+            "pytest",
+            "go test",
+            "go vet",
+            "go build",
+            "cargo test",
+            "cargo check",
+            "cargo build"
+          ],
+          "description": "Command prefixes agents may run WITHOUT prompting. Used in 'allowlist' mode (only these run) and as the pre-approved set in 'ask' mode (these run silently; anything else prompts). A command must start with one of these (verb + subcommand, e.g. 'git status') and contain no shell control characters (; & | > ` $()). Defaults are non-destructive verify/inspection commands only — never bare 'npm'/'git'/'npx' (that would auto-run installs/pushes); use 'Allow for project' to add more per-repo."
+        },
+        "roam.writeApproval": {
+          "type": "string",
+          "default": "none",
+          "enum": [
+            "none",
+            "ask"
+          ],
+          "enumDescriptions": [
+            "Agents write files freely (changes are still checkpointed and can be restored).",
+            "Prompt before each file write with a diff preview: Approve / Approve all (session) / Deny."
+          ],
+          "description": "Controls the write_file tool. 'ask' shows a diff and asks before each write (symmetric with roam.commandApproval); 'none' writes freely — every write is still recorded as a restorable checkpoint."
+        },
+        "roam.engine.postWriteDiagnostics": {
+          "type": "boolean",
+          "default": true,
+          "description": "Execution Engine (v0.5.2): after an agent writes a file, automatically collect the editor's diagnostics (TypeScript/ESLint/…) for that file and feed any errors back into the agent's next turn — so it sees and fixes the problem it just created without having to remember to run a checker. OpenAI-compatible backends only (the Claude backend manages its own loop). Turn off to disable the write→feedback hook."
+        },
+        "roam.engine.verifyObligation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Execution Engine (v0.5.2): when an agent's turn modified files but never verified them, nudge it once to run the project's checks (or state that verification is blocked) before finishing. If it still doesn't, the turn is marked '⚠ Changes not verified' rather than silently passing — it is never hard-blocked. OpenAI-compatible backends only."
+        },
+        "roam.engine.workspaceContext": {
+          "type": "boolean",
+          "default": false,
+          "description": "Opt-in: when enabled, Roam gathers a small workspace context at turn start (active editor snippet + workspace Error/Warning diagnostics) and passes it to the backend on TurnAttachments.workspaceContext. Disabled by default for privacy/perf."
+        },
+        "roam.marketplace.fetchCatalog": {
+          "type": "boolean",
+          "default": true,
+          "description": "Marketplace: when a catalog URL is set, fetch the hosted catalog at startup and merge it with the bundled one (hosted entries win on id collisions). Lets the catalog grow without an extension update. Fetch failures fall back to the bundled catalog."
+        },
+        "roam.worktree.autoMerge": {
+          "type": "boolean",
+          "default": false,
+          "description": "Worktree mode: after an agent's work merges into the integration branch, automatically merge integration into your branch and refresh the checkout. Off by default — merges accumulate on the integration branch and you land them with 'UnodeAi: Finalize Worktree Merges' when ready."
+        },
+        "roam.worktree.maxParallel": {
+          "type": "number",
+          "default": 4,
+          "minimum": 1,
+          "description": "Worktree mode: the maximum number of agents isolated in their own git worktree at once. Agents beyond this cap run on the shared workspace."
+        },
+        "roam.worktree.verifyBeforeMerge": {
+          "type": "boolean",
+          "default": true,
+          "description": "Worktree mode (verifier-as-gate): run your verify command (roam.verifyCommand — build/lint/test) in an agent's worktree before merging its work into the integration branch. If it fails, the work is held on the agent's own branch and handed back to fix — only verified work lands. Requires roam.verifyCommand to be set; with no command there's nothing to gate on and merges proceed. The command must be approved to run (it's in roam.allowedCommands by default for npm/test/build/tsc); a non-approved command is skipped rather than auto-run."
+        },
+        "roam.worktree.verifyTimeoutSeconds": {
+          "type": "number",
+          "default": 300,
+          "minimum": 10,
+          "maximum": 3600,
+          "description": "Worktree mode (verifier-as-gate): hard timeout for the verify command. If it doesn't exit within this many seconds (e.g. a watch-mode test, or one waiting for input), it's killed and treated as a failure — so a stuck command can't block the team's merges/finalize. Minimum 10s."
+        },
+        "roam.marketplace.catalogUrl": {
+          "type": "string",
+          "default": "https://raw.githubusercontent.com/weroamxyz/roam-skills/main/catalog.json",
+          "description": "Marketplace: URL of a hosted catalog JSON ({ agents, mcp, skills }), merged over the bundled catalog at startup (hosted wins on id collisions) so offerings can grow without an extension update. Hosted in the PUBLIC roam-skills repo (the roam-crew code repo is private, so its raw URL can't be fetched). Publishing = commit catalog.json to roam-skills (a deliberate content-repo edit). Sensitive MCP servers (stdio/remote/env) always require approval before mount regardless of catalog flags. Fetch failures fall back to the bundled catalog. Hosted at weroamxyz/roam-skills. Empty = bundled catalog only."
+        },
+        "roam.marketplace.skillLibraryUrl": {
+          "type": "string",
+          "default": "https://github.com/weroamxyz/roam-skills",
+          "description": "Agent Builder: the full skill library to open when you click \"Browse the full skill library\" in the skill picker. The in-app catalog stays lean; the long tail lives here (download or copy-paste a skill's JSON)."
+        },
+        "roam.chatParticipant.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show UnodeAi in the VS Code Chat panel as @roam (in addition to the sidebar views — both run side by side). Type @roam <goal> to hand a task to your crew. Turn off to keep UnodeAi only in its own sidebar."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "build": "tsc -p ./",
+    "build:bundle": "node esbuild.config.mjs",
+    "lint": "eslint src --ext ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "compile:e2e": "tsc -p ./test-e2e/tsconfig.json",
+    "test:e2e": "npm run compile:e2e && vscode-test",
+    "smoke:bundle": "npm run compile:e2e && node scripts/smoke-bundled-vsix.mjs",
+    "package": "vsce package",
+    "package:bundle": "node scripts/package-bundle.mjs",
+    "publish": "vsce publish",
+    "publish:bundle": "node scripts/publish-bundle.mjs"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.11.0",
+    "@types/uuid": "^10.0.0",
+    "@types/vscode": "^1.93.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1",
+    "@vscode/vsce": "^2.22.0",
+    "esbuild": "^0.21.5",
+    "eslint": "^8.56.0",
+    "mocha": "^10.4.0",
+    "typescript": "^5.3.0",
+    "vitest": "^4.1.8"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "uuid": "^11.1.1"
+  },
+  "overrides": {
+    "hono": "^4.12.25"
+  }
+}

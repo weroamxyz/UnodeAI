@@ -1,0 +1,10 @@
+{
+  "name": "ux-bench-sandbox",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Fixed sandbox for the UnodeAi vs Cline same-model UX benchmark. Dependency-free.",
+  "scripts": {
+    "test": "node --test",
+    "lint": "node -e \"['./src/mathUtils.js','./src/calculator.js','./src/formatter.js'].forEach(f=>require(f));console.log('lint ok')\""
+  }
+}

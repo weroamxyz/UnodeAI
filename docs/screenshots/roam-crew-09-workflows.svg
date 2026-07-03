@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-labelledby="title desc">
+  <title id="title">Roam Crew Workflow editor placeholder</title>
+  <desc id="desc">A workflow editor showing a template, role steps, and a conditional branch.</desc>
+  <defs>
+    <style>
+      .bg{fill:#1e1e1e}.panel{fill:#181818;stroke:#333}.card{fill:#252526;stroke:#464646}.step{fill:#292d35;stroke:#6a7895}.branch{fill:#312a18;stroke:#ffd166}.btn{fill:#0e639c}.text{font-family:Segoe UI,Arial,sans-serif;fill:#d4d4d4}.muted{fill:#a7adb7}.accent{fill:#b392ff}.yellow{fill:#ffd166}.small{font-size:18px}.mid{font-size:23px}.big{font-size:30px;font-weight:700}.tiny{font-size:15px}
+    </style>
+  </defs>
+  <rect class="bg" width="1280" height="760"/>
+  <rect class="panel" x="86" y="54" width="1108" height="640" rx="10"/>
+  <text class="text big" x="126" y="108">Roam Crew Workflow Editor</text>
+  <rect class="card" x="126" y="146" width="320" height="470" rx="8"/>
+  <text class="text mid" x="154" y="184">Workflow</text>
+  <text class="muted tiny" x="154" y="218">Template</text>
+  <rect class="step" x="154" y="236" width="244" height="42" rx="5"/><text class="text tiny" x="174" y="263">Feature Workflow</text>
+  <text class="muted tiny" x="154" y="318">Workflow ID</text>
+  <rect class="card" x="154" y="334" width="244" height="42" rx="5"/><text class="text tiny" x="174" y="361">feature-workflow</text>
+  <text class="muted tiny" x="154" y="414">Description</text>
+  <rect class="card" x="154" y="430" width="244" height="86" rx="5"/><text class="muted tiny" x="174" y="459">Plan, implement, review,</text><text class="muted tiny" x="174" y="483">then verify a feature.</text>
+  <rect class="btn" x="154" y="548" width="116" height="40" rx="5"/><text class="text tiny" x="190" y="574">Save</text>
+  <rect class="card" x="500" y="146" width="638" height="470" rx="8"/>
+  <text class="text mid" x="530" y="184">Steps</text>
+  <g transform="translate(530 222)">
+    <rect class="step" width="518" height="62" rx="8"/>
+    <text class="text small" x="20" y="28">1. Architect</text>
+    <text class="muted tiny" x="20" y="50">Define contract and risk areas</text>
+  </g>
+  <path d="M789 286v34" stroke="#7c4dff" stroke-width="4"/>
+  <g transform="translate(530 320)">
+    <rect class="step" width="518" height="62" rx="8"/>
+    <text class="text small" x="20" y="28">2. Developer</text>
+    <text class="muted tiny" x="20" y="50">Implement scoped file changes</text>
+  </g>
+  <path d="M789 382v34" stroke="#7c4dff" stroke-width="4"/>
+  <g transform="translate(530 416)">
+    <rect class="step" width="518" height="62" rx="8"/>
+    <text class="text small" x="20" y="28">3. Reviewer</text>
+    <text class="muted tiny" x="20" y="50">Review code and request fixes</text>
+  </g>
+  <path d="M789 478v34" stroke="#7c4dff" stroke-width="4"/>
+  <g transform="translate(530 512)">
+    <rect class="branch" width="518" height="62" rx="8"/>
+    <text class="yellow small" x="20" y="28">Conditional branch</text>
+    <text class="muted tiny" x="20" y="50">If review fails, jump back to Developer</text>
+  </g>
+  <text class="text big" x="126" y="656">8. Use workflows for repeatable role-to-role pipelines</text>
+</svg>
