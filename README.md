@@ -33,7 +33,7 @@ See **[USAGE.md](USAGE.md)** for the full guide.
 ## Providers & models
 
 - **Roam (default)** — the OpenAI-compatible **weroam** gateway (`https://ai.weroam.xyz/v1`); assign any of 50+ leading models per role. **Deeply discounted, price-competitive token pricing** — see live prices at **[ai.weroam.xyz/pricing](https://ai.weroam.xyz/pricing?lang=en)**.
-- **Unode Gateway** — an OpenAI-compatible LLM token gateway (`https://www.unodetech.xyz/v1`) built for the largest corporate customers; its own API key (`UNODE_API_KEY`), same 50+‑model, per‑role routing.
+- **Unode Gateway** — an OpenAI-compatible LLM token gateway (`https://www.unodetech.xyz/v1`) built for enterprise scale and the largest corporate customers. The same 50+‑model, per‑role routing as Roam, with its own API key (`UNODE_API_KEY`).
 - **Any OpenAI-compatible endpoint** — set the base URL per agent.
 - **Claude (headless)** — uses the `claude` CLI’s own authentication (no key stored here).
 
