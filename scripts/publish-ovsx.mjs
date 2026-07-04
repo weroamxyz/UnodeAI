@@ -30,11 +30,29 @@ const ovsx = process.platform === 'win32'
   ? join(root, 'node_modules', '.bin', 'ovsx.cmd')
   : join(root, 'node_modules', '.bin', 'ovsx');
 
-const token = process.env.OVSX_PAT;
+// Token resolution, most-convenient first:
+//   1. OVSX_PAT environment variable, OR
+//   2. a gitignored `.ovsx-pat` file at the repo root containing just the token.
+// The file avoids all shell-session/`setx` friction: write it once, publishing just works.
+function readToken() {
+  if (process.env.OVSX_PAT && process.env.OVSX_PAT.trim()) { return process.env.OVSX_PAT.trim(); }
+  const file = join(root, '.ovsx-pat');
+  if (existsSync(file)) {
+    const fromFile = readFileSync(file, 'utf8').trim();
+    if (fromFile) { return fromFile; }
+  }
+  return '';
+}
+
+const token = readToken();
 if (!token) {
-  console.error('ERROR: set OVSX_PAT to your Open VSX access token (open-vsx.org → Settings → Access Tokens).');
-  console.error('  POSIX:      OVSX_PAT=<token> npm run publish:ovsx');
-  console.error('  PowerShell: $env:OVSX_PAT="<token>"; npm run publish:ovsx');
+  console.error('ERROR: no Open VSX access token found (open-vsx.org → Settings → Access Tokens).');
+  console.error('Provide it either way:');
+  console.error('  A) A file (easiest — no shell env needed): create `.ovsx-pat` in the repo root with just the token, then re-run.');
+  console.error('     PowerShell:  Set-Content -NoNewline .ovsx-pat "ovsxp_your_token"');
+  console.error('  B) An env var IN THE SAME shell, on one line:');
+  console.error('     PowerShell:  $env:OVSX_PAT="ovsxp_your_token"; npm run publish:ovsx');
+  console.error('The `.ovsx-pat` file is gitignored (.ovsx*), so it can never be committed.');
   process.exit(1);
 }
 
