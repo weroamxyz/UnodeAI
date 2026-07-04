@@ -765,7 +765,7 @@ export async function activate(context: vscode.ExtensionContext) {
     outputChannel
   );
 
-  // @roam Chat-panel participant — ADDITIVE (the sidebar views above are untouched; both run at once).
+  // @unode Chat-panel participant — ADDITIVE (the sidebar views above are untouched; both run at once).
   // The handler routes the goal to the crew's PM (or first agent) on UnodeAi's OWN backend, streaming
   // the run into the chat panel. Toggle live via unode.chatParticipant.enabled.
   const runCrewGoal = async (
@@ -776,7 +776,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const agents = sessionManager.getAll();
     const target = agents.find((s) => canDelegate(s.config)) ?? agents[0];
     if (!target) {
-      return { ok: false, error: 'No agents yet. Open the UnodeAi sidebar and run "Create Default Team", then try @roam again.' };
+      return { ok: false, error: 'No agents yet. Open the UnodeAi sidebar and run "Create Default Team", then try @unode again.' };
     }
     const agentId = target.config.id;
     const agentName = target.config.name;
@@ -811,7 +811,7 @@ export async function activate(context: vscode.ExtensionContext) {
         unodeChatParticipant = registerUnodeChatParticipant(context.extensionUri, { runGoal: runCrewGoal });
         context.subscriptions.push(unodeChatParticipant);
       } catch (err) {
-        outputChannel.warn(`[chat] @roam participant registration failed: ${String(err)}`);
+        outputChannel.warn(`[chat] @unode participant registration failed: ${String(err)}`);
       }
     } else if (!enabled && unodeChatParticipant) {
       unodeChatParticipant.dispose();
@@ -2713,7 +2713,7 @@ function registerCommands(context: vscode.ExtensionContext) {
       openSkillLibrary: async () => {
         const raw = vscode.workspace.getConfiguration('unode').get<string>(
           'marketplace.skillLibraryUrl',
-          'https://github.com/weroamxyz/roam-skills'
+          'https://github.com/weroamxyz/unode-skills'
         );
         await vscode.env.openExternal(vscode.Uri.parse(raw));
       },
@@ -3467,7 +3467,7 @@ async function agentBuilderViewModel(extensionUri: vscode.Uri, agentId?: string)
     catalog,
     skillLibraryUrl: vscode.workspace.getConfiguration('unode').get<string>(
       'marketplace.skillLibraryUrl',
-      'https://github.com/weroamxyz/roam-skills'
+      'https://github.com/weroamxyz/unode-skills'
     ),
   };
 }

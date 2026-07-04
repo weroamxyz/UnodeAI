@@ -930,18 +930,18 @@
         },
         "unode.marketplace.catalogUrl": {
           "type": "string",
-          "default": "https://raw.githubusercontent.com/weroamxyz/roam-skills/main/catalog.json",
-          "description": "Marketplace: URL of a hosted catalog JSON ({ agents, mcp, skills }), merged over the bundled catalog at startup (hosted wins on id collisions) so offerings can grow without an extension update. Hosted in the PUBLIC roam-skills repo (the roam-crew code repo is private, so its raw URL can't be fetched). Publishing = commit catalog.json to roam-skills (a deliberate content-repo edit). Sensitive MCP servers (stdio/remote/env) always require approval before mount regardless of catalog flags. Fetch failures fall back to the bundled catalog. Hosted at weroamxyz/roam-skills. Empty = bundled catalog only."
+          "default": "https://raw.githubusercontent.com/weroamxyz/unode-skills/main/catalog.json",
+          "description": "Marketplace: URL of a hosted catalog JSON ({ agents, mcp, skills }), merged over the bundled catalog at startup (hosted wins on id collisions) so offerings can grow without an extension update. Hosted in the PUBLIC unode-skills repo (the roam-crew code repo is private, so its raw URL can't be fetched). Publishing = commit catalog.json to unode-skills (a deliberate content-repo edit). Sensitive MCP servers (stdio/remote/env) always require approval before mount regardless of catalog flags. Fetch failures fall back to the bundled catalog. Hosted at weroamxyz/unode-skills. Empty = bundled catalog only."
         },
         "unode.marketplace.skillLibraryUrl": {
           "type": "string",
-          "default": "https://github.com/weroamxyz/roam-skills",
+          "default": "https://github.com/weroamxyz/unode-skills",
           "description": "Agent Builder: the full skill library to open when you click \"Browse the full skill library\" in the skill picker. The in-app catalog stays lean; the long tail lives here (download or copy-paste a skill's JSON)."
         },
         "unode.chatParticipant.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "Show UnodeAi in the VS Code Chat panel as @roam (in addition to the sidebar views — both run side by side). Type @roam <goal> to hand a task to your crew. Turn off to keep UnodeAi only in its own sidebar."
+          "description": "Show UnodeAi in the VS Code Chat panel as @unode (in addition to the sidebar views — both run side by side). Type @unode <goal> to hand a task to your crew. Turn off to keep UnodeAi only in its own sidebar."
         }
       }
     }

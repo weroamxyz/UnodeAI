@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
- *  UnodeAi - @roam Chat-panel participant
- *  Puts UnodeAi into VS Code's native Chat panel as `@roam`, ADDITIVELY — the Team / Chat /
- *  Messages sidebar views are untouched and run simultaneously. A user types `@roam <goal>` in the
+ *  UnodeAi - @unode Chat-panel participant
+ *  Puts UnodeAi into VS Code's native Chat panel as `@unode`, ADDITIVELY — the Team / Chat /
+ *  Messages sidebar views are untouched and run simultaneously. A user types `@unode <goal>` in the
  *  Chat panel; we hand the goal to the crew's PM (or first agent) on UnodeAi's OWN backend (NOT the
  *  chat-provided model, so the cost-arbitrage/multi-agent value is preserved), stream the run back into
  *  the panel, and offer an "Open in UnodeAi" jump to the full team view.
@@ -30,7 +30,7 @@ export function makeUnodeChatHandler(deps: UnodeChatParticipantDeps): vscode.Cha
   return async (request, _context, stream, token) => {
     const goal = (request.prompt ?? '').trim();
     if (!goal) {
-      stream.markdown('Give me a goal and I\'ll put the crew on it — e.g. `@roam add a password-reset flow with tests`.');
+      stream.markdown('Give me a goal and I\'ll put the crew on it — e.g. `@unode add a password-reset flow with tests`.');
       return {};
     }
     stream.progress('UnodeAi is on it…');
@@ -56,7 +56,7 @@ export function makeUnodeChatHandler(deps: UnodeChatParticipantDeps): vscode.Cha
   };
 }
 
-/** Register `@roam` in the Chat panel. The `id` must match `contributes.chatParticipants[].id`. */
+/** Register `@unode` in the Chat panel. The `id` must match `contributes.chatParticipants[].id`. */
 export function registerUnodeChatParticipant(
   extensionUri: vscode.Uri,
   deps: UnodeChatParticipantDeps

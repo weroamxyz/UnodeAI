@@ -18,14 +18,14 @@ import {
 } from './catalog';
 
 /**
- * Ed25519 PUBLIC key (SPKI PEM) that signs the hosted catalog in weroamxyz/roam-skills. Bundled in the
+ * Ed25519 PUBLIC key (SPKI PEM) that signs the hosted catalog in weroamxyz/unode-skills. Bundled in the
  * VSIX so a tampered hosted push can't change what installs fetch. The matching PRIVATE key lives only in
  * the publish secret store and never enters this repo.
  *
  * ⚠️ PLACEHOLDER — replace with the real public key before turning protection on:
  *   1. `node scripts/sign-catalog.mjs --genkey` → keep the private PEM secret, copy the public PEM here.
  *   2. Sign on publish: `node scripts/sign-catalog.mjs catalog.json <private-key.pem>` → commit
- *      `catalog.json` + `catalog.json.sig` to roam-skills.
+ *      `catalog.json` + `catalog.json.sig` to unode-skills.
  * While this is blank/invalid the catalog runs in the warn-only transition (see fetchHostedCatalog): an
  * unsigned hosted catalog still merges (with a warning); a present-but-unverifiable `.sig` is rejected.
  */
@@ -85,7 +85,7 @@ export interface HostedCatalogOptions {
    * is fetched from `sigUrl` (default `${url}.sig`). Behavior (warn-only transition):
    *  - signature present & valid  → merge;
    *  - signature present & invalid → reject (return undefined) + warn (tamper / wrong key);
-   *  - signature absent           → merge anyway + warn it was unsigned (until roam-skills publishes one).
+   *  - signature absent           → merge anyway + warn it was unsigned (until unode-skills publishes one).
    * Omit `verify` entirely to skip integrity checking (used by unit tests that don't exercise signing).
    */
   verify?: { publicKeyPem: string; sigUrl?: string };

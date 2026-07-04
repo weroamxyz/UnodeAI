@@ -1,5 +1,5 @@
 {
-  "_comment": "UnodeAi hosted marketplace catalog (agents/mcp/skills). SOURCE OF TRUTH lives here in the (private) roam-crew repo with CI validation. TO PUBLISH: copy this file to the PUBLIC roam-skills repo as catalog.json on main — that public raw URL is what installs fetch (the private roam-crew raw URL 404s for everyone). Merged OVER the bundled catalog at runtime (hosted wins on id); offline-safe fallback to bundled. SECURITY: sensitive MCP servers (stdio/remote/env) ALWAYS show the approval modal before mount regardless of requiresApproval. Temporarily on weroamxyz/roam-skills; moves to the weroam org at v1.0.",
+  "_comment": "UnodeAi hosted marketplace catalog (agents/mcp/skills). SOURCE OF TRUTH lives here in the (private) roam-crew repo with CI validation. TO PUBLISH: copy this file to the PUBLIC unode-skills repo as catalog.json on main — that public raw URL is what installs fetch (the private roam-crew raw URL 404s for everyone). Merged OVER the bundled catalog at runtime (hosted wins on id); offline-safe fallback to bundled. SECURITY: sensitive MCP servers (stdio/remote/env) ALWAYS show the approval modal before mount regardless of requiresApproval. Temporarily on weroamxyz/unode-skills; moves to the weroam org at v1.0.",
   "agents": [
     {
       "id": "security-auditor",

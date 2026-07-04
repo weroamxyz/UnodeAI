@@ -11,7 +11,7 @@ const token = { isCancellationRequested: false, onCancellationRequested: () => (
 const call = (handler: any, prompt: string, stream: any) =>
   handler({ prompt } as never, {} as never, stream as never, token as never);
 
-describe('makeUnodeChatHandler (@roam)', () => {
+describe('makeUnodeChatHandler (@unode)', () => {
   it('asks for a goal when the prompt is empty', async () => {
     const stream = fakeStream();
     await call(makeUnodeChatHandler({ runGoal: vi.fn() }), '   ', stream);
