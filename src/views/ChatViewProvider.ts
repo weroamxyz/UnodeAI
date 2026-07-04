@@ -1184,14 +1184,20 @@ export class ChatViewProvider implements vscode.WebviewViewProvider, vscode.Disp
       font-family: var(--vscode-editor-font-family, monospace);
       font-size: 12px;
     }
-    .composer { display: flex; gap: 6px; align-items: stretch; }
+    /* flex-end so the Send/Stop buttons stay pinned to the bottom while the textarea auto-grows upward. */
+    .composer { display: flex; gap: 6px; align-items: flex-end; }
     .steer-hint { margin-top: 4px; color: var(--vscode-descriptionForeground); font-size: 11px; }
     textarea {
       flex: 1 1 auto;
       min-width: 0;
+      /* Height is driven by JS (autoGrow): grows with content up to max-height, then scrolls.
+         Keep min/max here in sync with COMPOSER_MAX_H in the script. */
       min-height: 46px;
-      max-height: 140px;
-      resize: vertical;
+      max-height: 200px;
+      height: 46px;
+      resize: none;
+      overflow-y: hidden;
+      box-sizing: border-box;
       border: 1px solid var(--vscode-input-border, var(--vscode-panel-border));
       border-radius: 6px;
       padding: 7px;
@@ -1202,6 +1208,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider, vscode.Disp
     }
     button.send {
       flex: 0 0 72px;
+      height: 46px;
       border: none;
       border-radius: 6px;
       color: var(--vscode-button-foreground);
@@ -1212,6 +1219,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider, vscode.Disp
     button.send:hover { background: var(--vscode-button-hoverBackground); }
     button.stop {
       flex: 0 0 64px;
+      height: 46px;
       border: 1px solid var(--vscode-button-border, transparent);
       border-radius: 6px;
       color: var(--vscode-button-secondaryForeground);
@@ -1974,12 +1982,24 @@ export class ChatViewProvider implements vscode.WebviewViewProvider, vscode.Disp
       return state.runningAgentIds.includes(state.selectedAgentId);
     }
 
+    // Auto-grow the composer: height follows content up to COMPOSER_MAX_H, then it scrolls.
+    // Keep COMPOSER_MAX_H in sync with the textarea max-height in CSS.
+    const COMPOSER_MAX_H = 200;
+    function autoGrow() {
+      if (!input || !input.style) return; // no-op outside a real DOM (unit-test eval)
+      input.style.height = 'auto';
+      const sh = input.scrollHeight || 0;
+      input.style.height = Math.min(sh, COMPOSER_MAX_H) + 'px';
+      input.style.overflowY = sh > COMPOSER_MAX_H ? 'auto' : 'hidden';
+    }
+
     function send() {
       const text = input.value.trim();
       const agentId = agentSelect.value;
       if (!text || !agentId) return;
       vscode.postMessage({ command: 'send', agentId, text, mode: state.mode || 'act' });
       input.value = '';
+      autoGrow(); // shrink back to a single line after sending
     }
 
     function stop() {
@@ -2015,6 +2035,9 @@ export class ChatViewProvider implements vscode.WebviewViewProvider, vscode.Disp
         send();
       }
     });
+    // Grow/shrink on every edit (typing, newlines, paste, cut), and set the initial single-line height.
+    input.addEventListener('input', autoGrow);
+    autoGrow();
     function appendDelta(msg) {
       if (msg.agentId !== state.selectedAgentId) return;
       const stick = isNearBottom();
