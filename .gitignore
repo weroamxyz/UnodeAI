@@ -45,3 +45,10 @@ tools/
 
 # Active-agent scratch (never ship)
 scripts/patch_chatview*.js
+
+# Secrets — never commit publishing tokens / env files (OVSX_PAT, VSCE_PAT, etc.)
+.env
+.env.*
+*.token
+*.pat
+.ovsx*
