@@ -955,6 +955,7 @@
     "lint": "eslint src --ext ts",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:rebrand": "vitest run src/__tests__/rebrand.smoke.test.ts",
     "compile:e2e": "tsc -p ./test-e2e/tsconfig.json",
     "test:e2e": "npm run compile:e2e && vscode-test",
     "smoke:bundle": "npm run compile:e2e && node scripts/smoke-bundled-vsix.mjs",
