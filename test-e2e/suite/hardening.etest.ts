@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 
-const EXT_ID = 'roamai.roam-crew';
+const EXT_ID = 'unode.unodeai';
 
 interface AgentLike {
   id: string;
@@ -28,7 +28,7 @@ describe('UnodeAi routing and concurrency', () => {
     const dev = requireAgent(team, (a) => a.role === 'senior-dev' || a.role === 'developer', 'Dev');
     const qa = requireAgent(team, (a) => a.role === 'reviewer' || a.role === 'tester' || a.role === 'qa', 'QA');
 
-    const sent = await vscode.commands.executeCommand<MessageLike>('roam.sendMessage', {
+    const sent = await vscode.commands.executeCommand<MessageLike>('unode.sendMessage', {
       targetId: qa.id,
       instruction: 'E5e routing probe for QA only',
     });
@@ -42,7 +42,7 @@ describe('UnodeAi routing and concurrency', () => {
   });
 
   it('queues the third agent at max concurrency 2 and auto-starts it when a slot frees', async () => {
-    const cfg = vscode.workspace.getConfiguration('roam');
+    const cfg = vscode.workspace.getConfiguration('unode');
     const originalLimit = cfg.get<number>('maxConcurrentAgents', 4);
     await cfg.update('maxConcurrentAgents', 2, vscode.ConfigurationTarget.Global);
     try {
@@ -51,15 +51,15 @@ describe('UnodeAi routing and concurrency', () => {
       assert.ok(team.length >= 3, 'default team should provide at least three agents');
 
       const [first, second, third] = team;
-      await vscode.commands.executeCommand<AgentLike>('roam.agentStart', first.id);
-      await vscode.commands.executeCommand<AgentLike>('roam.agentStart', second.id);
-      const queued = await vscode.commands.executeCommand<AgentLike>('roam.agentStart', third.id);
+      await vscode.commands.executeCommand<AgentLike>('unode.agentStart', first.id);
+      await vscode.commands.executeCommand<AgentLike>('unode.agentStart', second.id);
+      const queued = await vscode.commands.executeCommand<AgentLike>('unode.agentStart', third.id);
 
       assert.strictEqual(queued?.id, third.id);
       assert.strictEqual(queued?.pendingStart, true, 'third start should be pending behind the cap');
       assert.strictEqual(queued?.status, 'stopped');
 
-      const afterStop = await vscode.commands.executeCommand<AgentLike[]>('roam.agentStop', first.id);
+      const afterStop = await vscode.commands.executeCommand<AgentLike[]>('unode.agentStop', first.id);
       const resumed = await poll(
         () => afterStop?.find((agent) => agent.id === third.id),
         (agent): agent is AgentLike => !!agent && !agent.pendingStart && (agent.status === 'starting' || agent.status === 'idle'),
@@ -68,7 +68,7 @@ describe('UnodeAi routing and concurrency', () => {
 
       assert.ok(resumed, 'queued third agent should auto-start after a slot frees');
     } finally {
-      await vscode.commands.executeCommand('roam.stopAllAgents');
+      await vscode.commands.executeCommand('unode.stopAllAgents');
       await cfg.update('maxConcurrentAgents', originalLimit, vscode.ConfigurationTarget.Global);
     }
   });
@@ -84,7 +84,7 @@ async function createDefaultTeam(): Promise<AgentLike[]> {
       return items.includes('Add') ? 'Add' : undefined;
     };
 
-    const created = await vscode.commands.executeCommand<AgentLike[]>('roam.createDefaultTeam');
+    const created = await vscode.commands.executeCommand<AgentLike[]>('unode.createDefaultTeam');
     assert.ok(Array.isArray(created), 'createDefaultTeam should return created agents');
     return created;
   } finally {
@@ -99,7 +99,7 @@ async function setRoamApiKey(): Promise<void> {
   try {
     (vscode.window as any).showQuickPick = async () => ({ label: 'ROAM_API_KEY', secretName: 'ROAM_API_KEY' });
     (vscode.window as any).showInputBox = async () => 'sk-e2e-offline';
-    await vscode.commands.executeCommand('roam.setApiKey');
+    await vscode.commands.executeCommand('unode.setApiKey');
   } finally {
     (vscode.window as any).showQuickPick = originalQuickPick;
     (vscode.window as any).showInputBox = originalInputBox;

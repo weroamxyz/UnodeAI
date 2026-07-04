@@ -17,7 +17,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-const EXT_ID = 'roamai.roam-crew';
+const EXT_ID = 'unode.unodeai';
 const LIVE = process.env.ROAM_LIVE_SMOKE === '1' && !!process.env.ROAM_API_KEY;
 
 interface AgentLike { id: string; role: string; name: string; status?: string; }
@@ -39,7 +39,7 @@ interface AgentLike { id: string; role: string; name: string; status?: string; }
   });
 
   it('PM delegates, implements, reviews, verifies and edits the file on disk', async () => {
-    const cfg = vscode.workspace.getConfiguration('roam');
+    const cfg = vscode.workspace.getConfiguration('unode');
     // Optimistic (no worktree) keeps S5 to a single moving part; commands: run safe prefixes silently.
     await cfg.update('concurrencyStrategy', 'optimistic', vscode.ConfigurationTarget.Workspace);
     await cfg.update('commandApproval', 'ask', vscode.ConfigurationTarget.Workspace);
@@ -69,13 +69,13 @@ interface AgentLike { id: string; role: string; name: string; status?: string; }
     };
 
     try {
-      await vscode.commands.executeCommand('roam.setApiKey');
-      const team = await vscode.commands.executeCommand<AgentLike[]>('roam.createDefaultTeam');
+      await vscode.commands.executeCommand('unode.setApiKey');
+      const team = await vscode.commands.executeCommand<AgentLike[]>('unode.createDefaultTeam');
       assert.ok(Array.isArray(team) && team.length >= 3, 'default team should have PM + dev + reviewer');
       const pm = team.find((a) => a.role === 'pm');
       assert.ok(pm, 'team must include a PM coordinator');
 
-      await vscode.commands.executeCommand('roam.sendMessage', {
+      await vscode.commands.executeCommand('unode.sendMessage', {
         targetId: pm!.id,
         instruction:
           'In THIS workspace, add a `GET /status` route to src/app.js that returns {ok:true}, ' +
@@ -102,7 +102,7 @@ interface AgentLike { id: string; role: string; name: string; status?: string; }
       assert.ok(fs.existsSync(appFile), 'app.js must still exist in the workspace after the edit');
     } finally {
       Object.assign(vscode.window, orig);
-      await vscode.commands.executeCommand('roam.stopAllAgents').then(undefined, () => undefined);
+      await vscode.commands.executeCommand('unode.stopAllAgents').then(undefined, () => undefined);
     }
   });
 });

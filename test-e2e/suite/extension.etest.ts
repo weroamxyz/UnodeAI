@@ -8,27 +8,27 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 
-const EXT_ID = 'roamai.roam-crew';
+const EXT_ID = 'unode.unodeai';
 
 const EXPECTED_COMMANDS = [
-  'roam.showTeamPanel',
-  'roam.showDashboard',
-  'roam.addAgent',
-  'roam.createDefaultTeam',
-  'roam.createTeamPreset',
-  'roam.startSolo',
-  'roam.showAgentTerminal',
-  'roam.restoreCheckpoint',
-  'roam.sendMessage',
-  'roam.openChat',
-  'roam.chatWithAgent',
-  'roam.runWorkflow',
-  'roam.editWorkflow',
-  'roam.onboarding',
-  'roam.runDemoTask',
-  'roam.setApiKey',
-  'roam.openSettings',
-  'roam.resetWorkspaceState',
+  'unode.showTeamPanel',
+  'unode.showDashboard',
+  'unode.addAgent',
+  'unode.createDefaultTeam',
+  'unode.createTeamPreset',
+  'unode.startSolo',
+  'unode.showAgentTerminal',
+  'unode.restoreCheckpoint',
+  'unode.sendMessage',
+  'unode.openChat',
+  'unode.chatWithAgent',
+  'unode.runWorkflow',
+  'unode.editWorkflow',
+  'unode.onboarding',
+  'unode.runDemoTask',
+  'unode.setApiKey',
+  'unode.openSettings',
+  'unode.resetWorkspaceState',
 ];
 
 describe('UnodeAi activation', () => {
@@ -47,15 +47,15 @@ describe('UnodeAi activation', () => {
   });
 
   it('opens the Settings panel without throwing', async () => {
-    await vscode.commands.executeCommand('roam.openSettings');
+    await vscode.commands.executeCommand('unode.openSettings');
   });
 
   it('opens the Workflow Editor without throwing', async () => {
-    await vscode.commands.executeCommand('roam.editWorkflow');
+    await vscode.commands.executeCommand('unode.editWorkflow');
   });
 
   it('completes onboarding and sets the workspace flag', async () => {
-    const result = await vscode.commands.executeCommand('roam.onboarding', { completeImmediately: true });
+    const result = await vscode.commands.executeCommand('unode.onboarding', { completeImmediately: true });
     assert.strictEqual(result, true);
   });
 
@@ -69,8 +69,8 @@ describe('UnodeAi activation', () => {
         const items = args.filter((item): item is string => typeof item === 'string');
         return items.includes('Add') ? 'Add' : undefined;
       };
-      await vscode.commands.executeCommand('roam.createDefaultTeam');
-      await vscode.commands.executeCommand('roam.runDemoTask', 'hello-world-http-server');
+      await vscode.commands.executeCommand('unode.createDefaultTeam');
+      await vscode.commands.executeCommand('unode.runDemoTask', 'hello-world-http-server');
     } finally {
       (vscode.window as unknown as { showInformationMessage: typeof vscode.window.showInformationMessage }).showInformationMessage =
         originalInfo;
