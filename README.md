@@ -24,7 +24,7 @@ Build a team of AI agents inside VS Code. Each agent runs in its own session wit
 ## Quick start
 
 1. Install **UnodeAi** from the Marketplace and reload VS Code. On first run, the **Setup Wizard** opens automatically — it walks you through the steps below.
-2. Set your key: **“UnodeAi: Set Provider API Key”** → paste your Roam token. The default gateway is `https://ai.weroam.xyz/v1` (OpenAI-compatible, `Authorization: Bearer <key>`). Browse models & pricing at <https://ai.weroam.xyz/pricing?lang=en>.
+2. Set your key: **“UnodeAi: Set Provider API Key”** → select your provider and paste its API key. You can use OpenAI, Anthropic, OpenRouter, or any OpenAI-compatible endpoint. The default provider is the Roam (weroam) gateway at `https://ai.weroam.xyz/v1` (OpenAI-compatible, `Authorization: Bearer <key>`; browse its models & pricing at <https://ai.weroam.xyz/pricing?lang=en>).
 3. Create a team: **“UnodeAi: Create Default Team”** spins up a PM + Architect + Developer + Reviewer crew.
 4. Put them to work: open the **Chat** panel (or **“UnodeAi: Run Demo Task”**), give the PM a goal, and watch the crew collaborate — streaming replies, tool cards, and the Activity Feed.
 

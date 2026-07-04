@@ -322,7 +322,7 @@ export class DashboardProvider {
   ${recentTasks}
 
   <div class="footer">
-    UnodeAi v0.1.0 &bull; Multi-model AI team for VS Code &bull; Powered by Roam tokens
+    UnodeAi &bull; Multi-model AI team for VS Code &bull; Bring your own model provider
   </div>
 </body>
 </html>`;

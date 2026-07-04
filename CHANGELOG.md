@@ -4,6 +4,13 @@ All notable changes to UnodeAi are documented here.
 
 ## [Unreleased]
 
+## [0.9.18] — 2026-07-03 · Provider-neutral wording
+
+- **Provider-neutral setup copy.** The Quick-start key step, the "team/solo created" prompts, and the
+  dashboard footer no longer imply the Roam gateway is required — they now say to set the API key for the
+  provider you select (OpenAI, Anthropic, OpenRouter, any OpenAI-compatible endpoint, or the default Roam
+  gateway). Also dropped a stale hardcoded version and the "Powered by Roam tokens" footer tagline.
+
 ## [0.9.17] — 2026-07-03 · Egress consent — nothing leaves the machine until you approve the destination
 
 - **Per-gateway egress consent.** Before any model request is sent, UnodeAi asks once per destination host

@@ -199,7 +199,7 @@ async function instantiateTeam(
 
   if (!(await d.secrets.has('ROAM_API_KEY'))) {
     const choice = await vscode.window.showInformationMessage(
-      `Team created (${label}). Set your Roam API key to start working.`, 'Set API Key'
+      `Team created (${label}). Set your provider API key to start working.`, 'Set API Key'
     );
     if (choice === 'Set API Key') {
       await d.secrets.promptAndStore('ROAM_API_KEY', 'ROAM_API_KEY');
@@ -451,7 +451,7 @@ export async function createSoloAgent(d: DialogDeps): Promise<AgentConfig | unde
 
   if (!(await d.secrets.has('ROAM_API_KEY'))) {
     const choice = await vscode.window.showInformationMessage(
-      'Solo agent created. Set your Roam API key to start working.', 'Set API Key'
+      'Solo agent created. Set your provider API key to start working.', 'Set API Key'
     );
     if (choice === 'Set API Key') {
       await d.secrets.promptAndStore('ROAM_API_KEY', 'ROAM_API_KEY');
