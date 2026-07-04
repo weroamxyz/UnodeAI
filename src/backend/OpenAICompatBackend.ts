@@ -1347,7 +1347,13 @@ export class OpenAICompatBackend implements AgentBackend {
         body.parallel_tool_calls = false;
       }
     }
-    if (temperature !== undefined) {
+    // Extended thinking is active this turn (explicit `thinking`, or a reasoning_effort we're still sending
+    // that the gateway maps to thinking, e.g. Claude on weroam). Anthropic/thinking models REJECT any
+    // temperature other than 1 while thinking is on ("temperature may only be set to 1 when thinking is
+    // enabled" → HTTP 400), so omit temperature unless it's exactly 1. This is why a Claude PM/agent with
+    // reasoning stalled with a 400 mid-turn.
+    const thinkingActive = !!p.thinking || (!!p.reasoning_effort && !this.dropReasoningEffort);
+    if (temperature !== undefined && !(thinkingActive && temperature !== 1)) {
       body.temperature = temperature;
     }
     if (maxTokens) {

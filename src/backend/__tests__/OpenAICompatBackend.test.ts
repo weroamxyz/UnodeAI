@@ -157,6 +157,28 @@ describe('OpenAICompatBackend', () => {
     expect(events.find((e) => e.kind === 'turn_complete')).toMatchObject({ result: { isError: true } });
   });
 
+  it('omits temperature when reasoning/thinking is active (Claude thinking models reject temp != 1)', async () => {
+    const { fetchFn, requests } = scriptedFetch([{ choices: [{ message: { role: 'assistant', content: 'ok' } }] }]);
+    const backend = new OpenAICompatBackend(makeConfig(), fetchFn, undefined, undefined, undefined, { retryBaseMs: 0 });
+    await runOneTurn(backend, 'go', { modelParams: { temperature: 0.7, reasoning_effort: 'high' } } as any);
+    expect(requests[0].reasoning_effort).toBe('high');
+    expect(requests[0].temperature).toBeUndefined(); // dropped — would otherwise 400 with thinking on
+  });
+
+  it('keeps temperature when reasoning is active but temperature is exactly 1', async () => {
+    const { fetchFn, requests } = scriptedFetch([{ choices: [{ message: { role: 'assistant', content: 'ok' } }] }]);
+    const backend = new OpenAICompatBackend(makeConfig(), fetchFn, undefined, undefined, undefined, { retryBaseMs: 0 });
+    await runOneTurn(backend, 'go', { modelParams: { temperature: 1, reasoning_effort: 'high' } } as any);
+    expect(requests[0].temperature).toBe(1);
+  });
+
+  it('sends temperature normally when there is no reasoning/thinking', async () => {
+    const { fetchFn, requests } = scriptedFetch([{ choices: [{ message: { role: 'assistant', content: 'ok' } }] }]);
+    const backend = new OpenAICompatBackend(makeConfig(), fetchFn, undefined, undefined, undefined, { retryBaseMs: 0 });
+    await runOneTurn(backend, 'go', { modelParams: { temperature: 0.3 } } as any);
+    expect(requests[0].temperature).toBe(0.3);
+  });
+
   // P2: a write-capable worker that ends a turn claiming "already done / no changes needed" WITHOUT
   // having used any tool gets one nudge to read-and-verify before concluding (the stale-memory bug).
   it('nudges a write-capable worker that claims "already done" with no tool calls', async () => {
@@ -856,7 +878,7 @@ describe('OpenAICompatBackend', () => {
       const off = backend.onEvent((e) => { if (e.kind === 'turn_complete') { off(); resolve(); } });
       backend.sendUserTurn('hi', {
         modelParams: {
-          temperature: 0.3,
+          temperature: 1, // must be 1 here: thinking is enabled below, and temp != 1 is dropped (see thinking-temp tests)
           top_p: 0.9,
           max_tokens: 8000,
           presence_penalty: 0.5,
@@ -870,7 +892,7 @@ describe('OpenAICompatBackend', () => {
     });
 
     const body = requests[0];
-    expect(body.temperature).toBe(0.3);
+    expect(body.temperature).toBe(1);
     expect(body.top_p).toBe(0.9);
     expect(body.max_tokens).toBe(8000);
     expect(body.presence_penalty).toBe(0.5);
