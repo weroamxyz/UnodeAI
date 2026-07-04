@@ -78,6 +78,9 @@ when you say so — the safe defaults *are* the product, not a settings page you
   so end-to-end retention is entirely your call: UnodeAi works with **any** OpenAI-compatible endpoint,
   including a **self-hosted / in-VPC model**, for provable, contractual zero-retention.
 
+📋 **Full security audit** — every network destination, execution surface, secret-handling detail, and
+what the extension does *not* contain: **[SECURITY.md](https://github.com/weroamxyz/UnodeAI/blob/main/SECURITY.md)**.
+
 ## Links
 
 - **[User Guide](USAGE.md)** — full walkthrough

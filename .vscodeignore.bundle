@@ -29,6 +29,7 @@ package-lock.json
 !USAGE.md
 !CHANGELOG.md
 !LICENSE
+!SECURITY.md
 
 node_modules/**
 !node_modules/

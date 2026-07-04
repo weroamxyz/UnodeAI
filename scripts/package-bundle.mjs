@@ -67,6 +67,7 @@ try {
     'USAGE.md',
     'CHANGELOG.md',
     'LICENSE',
+    'SECURITY.md',
     'out/extension.js',
     'out/extension.js.map',
   ]) {

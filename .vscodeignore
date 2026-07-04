@@ -41,6 +41,7 @@ tsc_output.txt
 !CHANGELOG.md
 !LICENSE
 !THIRD_PARTY_NOTICES.md
+!SECURITY.md
 
 # NOTE: docs/** stays excluded — it's internal planning/review material (PRD, DevPlan, Codex
 # logs, review handoffs). Only README/USAGE/CHANGELOG ship to users.
