@@ -16,6 +16,33 @@ describe('recoverLeakedToolCalls', () => {
     expect(recoverLeakedToolCalls('')).toEqual([]);
   });
 
+  // GLM-5.2 / Qwen / Hermes format: `<tool_call>{json}</tool_call>` — the bug that stalled the GLM dev.
+  it('recovers a GLM/Qwen <tool_call>{json} call with a nested arguments object', () => {
+    const content = 'Sure, running it now.\n<tool_call>\n{"name": "run_command", "arguments": {"command": "npm test"}}\n</tool_call>';
+    expect(recoverLeakedToolCalls(content)).toEqual([{ name: 'run_command', args: { command: 'npm test' } }]);
+  });
+
+  it('recovers a <tool_call> call whose arguments are a JSON string', () => {
+    const content = '<tool_call>{"name": "read_file", "arguments": "{\\"path\\": \\"a.ts\\"}"}</tool_call>';
+    expect(recoverLeakedToolCalls(content)).toEqual([{ name: 'read_file', args: { path: 'a.ts' } }]);
+  });
+
+  it('recovers multiple <tool_call> blocks and ignores a truncated/invalid one', () => {
+    const content =
+      '<tool_call>{"name":"list_dir","arguments":{"path":"."}}</tool_call>' +
+      '<tool_call>{"name":"read_file","arguments":{"path":"b.ts"}}</tool_call>' +
+      '<tool_call>{"name":"broken", "arg'; // truncated, no close tag / bad JSON
+    expect(recoverLeakedToolCalls(content)).toEqual([
+      { name: 'list_dir', args: { path: '.' } },
+      { name: 'read_file', args: { path: 'b.ts' } },
+    ]);
+  });
+
+  it('strips a leaked <tool_call> block from the visible transcript', () => {
+    const content = 'On it.\n<tool_call>{"name":"run_command","arguments":{"command":"ls"}}</tool_call>';
+    expect(stripToolCallMarkup(content)).toBe('On it.');
+  });
+
   it('recovers a DeepSeek read_file call leaked into content', () => {
     const content = `${D}tool_calls> ${invokeOpen('read_file')} ${param('path', 'src/backend/CommandApprovalPrompter.ts')} ${invokeClose} ${Dc}tool_calls>`;
     expect(recoverLeakedToolCalls(content)).toEqual([

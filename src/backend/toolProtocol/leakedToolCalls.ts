@@ -25,21 +25,65 @@ const PARAM_RE = /parameter\s+name="([^"]+)"[^>]*>([\s\S]*?)<\/?[^>]*?parameter>
 // Kimi/Moonshot leak: `<|tool_call_begin|>functions.NAME:ID<|tool_call_argument_begin|>{json}<|tool_call_end|>`.
 const KIMI_CALL_RE =
   /<\|tool_call_begin\|>\s*(?:functions\.)?([^\s:|<]+)(?::\d+)?\s*<\|tool_call_argument_begin\|>([\s\S]*?)<\|tool_call_end\|>/g;
+// GLM / Qwen / Hermes leak: `<tool_call>{"name":"TOOL","arguments":{…}}</tool_call>` (arguments may be a
+// nested object OR a JSON string). GLM-5.2 emits this even when told to use another format, so the XML/native
+// parser sees no call and stalls. Matched tolerantly (optional whitespace/newlines around the JSON body).
+const JSON_TOOL_CALL_RE = /<tool_call>\s*([\s\S]*?)\s*<\/tool_call>/gi;
 
 /**
  * Recover tool calls a model leaked into message text instead of the OpenAI `tool_calls` field, across
- * the known token formats (DeepSeek DSML `invoke`/`parameter`, antml, Kimi `<|tool_call_begin|>`).
- * Returns [] when no leak pattern is present. Never throws.
+ * the known token formats (GLM/Qwen/Hermes `<tool_call>{json}</tool_call>`, DeepSeek DSML `invoke`/
+ * `parameter`, antml, Kimi `<|tool_call_begin|>`). Returns [] when no leak pattern is present. Never throws.
  */
 export function recoverLeakedToolCalls(content: string): RecoveredCall[] {
   if (!content) {
     return [];
+  }
+  const jsonTag = recoverJsonToolCallTags(content);
+  if (jsonTag.length > 0) {
+    return jsonTag;
   }
   const kimi = recoverKimiCalls(content);
   if (kimi.length > 0) {
     return kimi;
   }
   return recoverInvokeCalls(content);
+}
+
+/** GLM/Qwen/Hermes `<tool_call>{"name","arguments"}</tool_call>` — the body is JSON; parse name + args. */
+function recoverJsonToolCallTags(content: string): RecoveredCall[] {
+  if (!/<tool_call>/i.test(content)) {
+    return [];
+  }
+  const out: RecoveredCall[] = [];
+  for (const m of content.matchAll(JSON_TOOL_CALL_RE)) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(m[1].trim());
+    } catch {
+      continue; // truncated / non-JSON body — skip so the model can be re-prompted
+    }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      continue;
+    }
+    const obj = parsed as Record<string, unknown>;
+    const name = typeof obj.name === 'string' ? obj.name.trim() : '';
+    if (!name) {
+      continue;
+    }
+    let args: Record<string, unknown> = {};
+    const raw = obj.arguments ?? obj.parameters ?? {};
+    if (typeof raw === 'string') {
+      try {
+        const a = JSON.parse(raw);
+        if (a && typeof a === 'object' && !Array.isArray(a)) { args = a as Record<string, unknown>; }
+      } catch { /* leave empty → required-param validation prompts a correction */ }
+    } else if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+      args = raw as Record<string, unknown>;
+    }
+    out.push({ name, args });
+  }
+  return out;
 }
 
 /** Kimi/Moonshot format: the arguments block is proper JSON, so we parse it into typed args. */
@@ -104,6 +148,7 @@ export function stripToolCallMarkup(content: string, toolNames: string[] = []): 
     return content;
   }
   let out = content
+    .replace(/<tool_call>[\s\S]*?<\/tool_call>/gi, '') // GLM/Qwen/Hermes JSON tool-call block
     .replace(/<[^>]*?use_tool\b[^>]*>[\s\S]*?<\/[^>]*?use_tool>/gi, '')
     .replace(/<[^>]*?tool_calls\b[^>]*>[\s\S]*?<\/[^>]*?tool_calls>/gi, '')
     .replace(/<[^>]*?invoke\b[^>]*>[\s\S]*?<\/[^>]*?invoke>/gi, '')
