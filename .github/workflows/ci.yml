@@ -30,6 +30,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Rebrand guard (roam→unode namespace intact; weroam provider preserved)
+        run: npm run test:rebrand
+
       - name: Unit tests
         run: npm test
 
