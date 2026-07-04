@@ -529,6 +529,23 @@ describe('OpenAICompatBackend', () => {
     expect(JSON.stringify(requests[1].messages.find((m: any) => m.role === 'tool'))).toMatch(/DELEGATE/);
   });
 
+  it('lets a coordinator self-execute after being bounced to delegate the limit N times (anti-deadlock)', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'roam-gate-escape-'));
+    await fs.writeFile(path.join(root, 'README.md'), 'hello\n', 'utf8');
+    // Distinct new_string each attempt so a repeated-identical-call stall guard doesn't fire (real crews
+    // vary their calls too). All target 'hello', which is still present because attempts 1-2 are bounced.
+    const editTurn = (to: string) => ({ choices: [{ message: { role: 'assistant', content: '', tool_calls: [{ id: 'c1', type: 'function', function: { name: 'apply_edit', arguments: JSON.stringify({ path: 'README.md', old_string: 'hello', new_string: to }) } }] }, finish_reason: 'tool_calls' }] });
+    // 3 apply_edit attempts: first 2 are bounced to delegate, the 3rd (past SELF_DO_BOUNCE_LIMIT=2) executes.
+    const { fetchFn, requests } = scriptedFetch([editTurn('a'), editTurn('b'), editTurn('hi'), { choices: [{ message: { role: 'assistant', content: 'done' } }] }]);
+    const team = new TeamTools('pm', { list: () => [{ id: 'pm', role: 'pm', name: 'PM', status: 'idle' }, { id: 'dev', role: 'senior-dev', name: 'Dev', status: 'idle' }], resolve: () => ({ id: 'dev' }) }, new MessageBus());
+    const backend = new OpenAICompatBackend(makeConfig({ allowedTools: ['read', 'write'], workingDirectory: root }), fetchFn, team, undefined, undefined, { retryBaseMs: 0 });
+    await runOneTurn(backend, 'edit it');
+    const lastTool = (i: number) => JSON.stringify(requests[i].messages.filter((m: any) => m.role === 'tool').at(-1));
+    expect(lastTool(1)).toMatch(/DELEGATE/); // 1st attempt bounced
+    expect(lastTool(2)).toMatch(/DELEGATE/); // 2nd attempt bounced
+    expect(await fs.readFile(path.join(root, 'README.md'), 'utf8')).toBe('hi\n'); // 3rd attempt executed (escape hatch)
+  });
+
   it('lets the PM\'s write tools execute as a fallback when it has NO teammates', async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), 'roam-gate-solo-'));
     await fs.writeFile(path.join(root, 'README.md'), 'hello\n', 'utf8');

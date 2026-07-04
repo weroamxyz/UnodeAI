@@ -129,6 +129,9 @@ const MAX_BODY_RECOVERIES = 4;
 /** Workspace file-write / command tools a coordinator (PM) must DELEGATE rather than run itself when it has
  *  teammates. Read tools (read_file/list_dir/search_files) are NOT gated — reading context is fine. */
 const SELF_DO_TOOLS = new Set(['write_file', 'apply_edit', 'delete_file', 'run_command', 'check_command', 'kill_command']);
+/** How many times a coordinator is redirected to delegate before it's allowed to run a self-do tool itself
+ *  (anti-deadlock: a crew that can't execute must not permanently block the lead from a fallback). */
+const SELF_DO_BOUNCE_LIMIT = 2;
 /** v0.5.2 verification obligation: nudge at most this many times when a turn wrote files without verifying. */
 const MAX_VERIFY_NUDGES = 1;
 /** P2: nudge at most this many times when a write-capable worker ends a turn claiming "already done"
@@ -180,6 +183,9 @@ export class OpenAICompatBackend implements AgentBackend {
   private currentMode: ChatMode = 'act';
   /** Set once a model rejects reasoning_effort (e.g. 'max' on Kimi) so we stop sending it this session. */
   private dropReasoningEffort = false;
+  /** How many times this coordinator has been redirected to delegate instead of running a self-do tool.
+   *  Past SELF_DO_BOUNCE_LIMIT it's allowed to self-execute (delegation isn't resolving the task). */
+  private selfDoBounces = 0;
   /** Set once a gateway rejects parallel_tool_calls as an unknown field, so we stop sending it this
    *  session (some OpenAI-compatible/custom endpoints 400 on it). splitParallelToolCalls still protects us. */
   private dropParallelToolCalls = false;
@@ -893,13 +899,24 @@ export class OpenAICompatBackend implements AgentBackend {
     // tool, redirect it to DELEGATE rather than do the work itself (Solo mode is the self-do path). The tool
     // stays in its set so an aliased Edit doesn't hit an "unknown tool" the model distrusts — but USING it is
     // bounced to assign_task. With NO teammates, its file tools execute as a genuine fallback.
+    //
+    // ESCAPE HATCH (anti-deadlock): only nudge the first SELF_DO_BOUNCE_LIMIT times. If the coordinator has
+    // been redirected that many times and STILL needs this tool, delegation isn't resolving the task (e.g.
+    // teammates can't execute, or none has the tool) — so let it run the tool itself rather than loop forever.
+    // Without this, a broken crew makes the PM permanently stuck: every self-do attempt is bounced, and it
+    // can never fall back to doing the work directly.
     if (SELF_DO_TOOLS.has(name) && this.team?.hasTeammates()) {
-      output =
-        `You have teammates — DELEGATE this instead of doing it yourself. Call ` +
-        `assign_task("senior-dev", "<the full task: name the file and exactly what to change>") and report ` +
-        `the result. As the lead you orchestrate; the specialist does the edit or runs the command.`;
-      const summary = summarizeToolResult(name, args, output);
-      return { output, ok: false, summary: summary.summary, detail: summary.detail, effectiveName: name };
+      this.selfDoBounces++;
+      if (this.selfDoBounces <= SELF_DO_BOUNCE_LIMIT) {
+        output =
+          `You have teammates — DELEGATE this instead of doing it yourself. Call ` +
+          `assign_task("senior-dev", "<the full task: name the file and exactly what to change>") and report ` +
+          `the result. As the lead you orchestrate; the specialist does the edit or runs the command. ` +
+          `(If delegation keeps failing, you may run this tool yourself as a last resort.)`;
+        const summary = summarizeToolResult(name, args, output);
+        return { output, ok: false, summary: summary.summary, detail: summary.detail, effectiveName: name };
+      }
+      // Past the nudge limit — fall through and execute the tool directly (delegation isn't working).
     }
     if (this.mcp?.hub.hasTool(name)) {
       output = await this.mcp.hub.executeTool(name, args, this.mcp.grants);
