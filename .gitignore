@@ -53,3 +53,6 @@ scripts/patch_chatview*.js
 *.token
 *.pat
 .ovsx*
+
+# Temp extraction/checks
+.tmp-*
