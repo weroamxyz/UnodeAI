@@ -34,12 +34,18 @@ const ovsx = process.platform === 'win32'
 //   1. OVSX_PAT environment variable, OR
 //   2. a gitignored `.ovsx-pat` file at the repo root containing just the token.
 // The file avoids all shell-session/`setx` friction: write it once, publishing just works.
+const TOKEN_PLACEHOLDER = 'PASTE_YOUR_OPEN_VSX_TOKEN_HERE';
 function readToken() {
   if (process.env.OVSX_PAT && process.env.OVSX_PAT.trim()) { return process.env.OVSX_PAT.trim(); }
   const file = join(root, '.ovsx-pat');
   if (existsSync(file)) {
     const fromFile = readFileSync(file, 'utf8').trim();
-    if (fromFile) { return fromFile; }
+    if (fromFile && fromFile !== TOKEN_PLACEHOLDER) { return fromFile; }
+    if (fromFile === TOKEN_PLACEHOLDER) {
+      console.error('The .ovsx-pat file still contains the placeholder. Open it, replace it with your real');
+      console.error('Open VSX token (open-vsx.org → Settings → Access Tokens), save, and re-run.');
+      process.exit(1);
+    }
   }
   return '';
 }
