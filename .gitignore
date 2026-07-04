@@ -27,6 +27,7 @@ Thumbs.db
 
 # Local runtime / external-tool dirs (created when the extension or other tools run against this repo)
 .unode/
+.roam/
 .codeep/
 tools/
 # Claude-backend MCP bridge config written to the agent cwd (contains a local loopback bridge token);

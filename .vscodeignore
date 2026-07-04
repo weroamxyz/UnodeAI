@@ -3,8 +3,17 @@
 .vscode-test.mjs
 .claude/**
 .codeep/**
+# Secrets & publishing tokens — MUST never be packaged (vsce uses .vscodeignore, not .gitignore)
+.ovsx*
+.env
+.env.*
+*.pat
+*.token
+# Per-workspace runtime/state dirs (current + legacy name) — never ship dogfood state
 .unode/**
 .unode-mcp.json
+.roam/**
+.roam-mcp.json
 .npm-cache/**
 tmp/**
 .bundle-package/**

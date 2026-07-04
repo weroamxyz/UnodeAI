@@ -68,6 +68,7 @@ try {
     'CHANGELOG.md',
     'LICENSE',
     'SECURITY.md',
+    'THIRD_PARTY_NOTICES.md',
     'out/extension.js',
     'out/extension.js.map',
   ]) {
