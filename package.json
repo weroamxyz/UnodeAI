@@ -721,17 +721,17 @@
         },
         "unode.defaultProvider": {
           "type": "string",
-          "default": "roam",
+          "default": "unode",
           "enum": [
-            "roam",
             "unode",
+            "roam",
             "anthropic",
             "openai",
             "google",
             "ollama",
             "custom"
           ],
-          "description": "Default LLM provider for new agents (default: roam = the weroam gateway)"
+          "description": "Default LLM provider for new agents (default: unode = the Unode gateway at unodetech.xyz). 'roam' is a partner gateway (weroam); the rest are the usual direct providers."
         },
         "unode.baseUrl": {
           "type": "string",

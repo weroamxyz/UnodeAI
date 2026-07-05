@@ -103,9 +103,9 @@ describe('rebrand: no legacy `roam` contribution ids leak into source', () => {
 });
 
 describe('rebrand: weroam gateway PROVIDER is intentionally preserved (do NOT rename)', () => {
-  it('default provider is still `roam` and the enum offers roam + unode', () => {
-    expect(cfg['unode.defaultProvider'].default).toBe('roam');
-    expect(cfg['unode.defaultProvider'].enum).toContain('roam');
+  it('default provider is `unode`, with `roam` (weroam) still offered as a partner provider', () => {
+    expect(cfg['unode.defaultProvider'].default).toBe('unode');
+    expect(cfg['unode.defaultProvider'].enum).toContain('roam'); // weroam still selectable, just not the default
     expect(cfg['unode.defaultProvider'].enum).toContain('unode');
   });
   it('default gateway base URL is the weroam endpoint', () => {

@@ -187,8 +187,8 @@ async function instantiateTeam(
     const config = new AgentConfigBuilder(template.role)
       .fromTemplate(roleKey)
       .setName(uniqueAgentName(d, template.name))
-      .setProviderById('roam')
-      .setModel(modelForRole(template, 'roam'))
+      .setProviderById('unode')
+      .setModel(modelForRole(template, 'unode'))
       .setAutoApprove(false)
       .build();
     config.backend = d.defaultBackendKind(config); // roam -> openai-compat
@@ -197,12 +197,12 @@ async function instantiateTeam(
   }
   d.output.info(`Created team: ${label} (Roam).`);
 
-  if (!(await d.secrets.has('ROAM_API_KEY'))) {
+  if (!(await d.secrets.has('UNODE_API_KEY'))) {
     const choice = await vscode.window.showInformationMessage(
       `Team created (${label}). Set your provider API key to start working.`, 'Set API Key'
     );
     if (choice === 'Set API Key') {
-      await d.secrets.promptAndStore('ROAM_API_KEY', 'ROAM_API_KEY');
+      await d.secrets.promptAndStore('UNODE_API_KEY', 'UNODE_API_KEY');
     }
   } else {
     vscode.window.showInformationMessage(`Team created: ${label}. Send the PM a task to begin.`);
@@ -441,20 +441,20 @@ export async function createSoloAgent(d: DialogDeps): Promise<AgentConfig | unde
   const config = new AgentConfigBuilder(template.role)
     .fromTemplate('solo')
     .setName(uniqueAgentName(d, template.name))
-    .setProviderById('roam')
-    .setModel(modelForRole(template, 'roam'))
+    .setProviderById('unode')
+    .setModel(modelForRole(template, 'unode'))
     .setAutoApprove(false)
     .build();
   config.backend = d.defaultBackendKind(config); // roam -> openai-compat
   d.sessionManager.create(config);
   d.output.info(`Solo agent created: ${config.name} (model ${config.model}).`);
 
-  if (!(await d.secrets.has('ROAM_API_KEY'))) {
+  if (!(await d.secrets.has('UNODE_API_KEY'))) {
     const choice = await vscode.window.showInformationMessage(
       'Solo agent created. Set your provider API key to start working.', 'Set API Key'
     );
     if (choice === 'Set API Key') {
-      await d.secrets.promptAndStore('ROAM_API_KEY', 'ROAM_API_KEY');
+      await d.secrets.promptAndStore('UNODE_API_KEY', 'UNODE_API_KEY');
     }
   }
   return config;
@@ -474,16 +474,17 @@ export async function showAddAgentDialog(d: DialogDeps): Promise<AgentConfig | u
   );
   if (!rolePick) { return undefined; }
 
+  const providerRank = (k: string) => (k === 'unode' ? 0 : k === 'roam' ? 1 : 2); // Unode first, then partner Roam
   const providerPick = await vscode.window.showQuickPick(
-    Object.keys(DEFAULT_PROVIDERS).filter(isSupportedProviderId).map((key) => ({
-      label: key === 'roam' ? '🏠 Roam (Recommended)' : key === 'unode' ? 'Unode' : key.charAt(0).toUpperCase() + key.slice(1),
-      description: key === 'roam' ? 'Multi-model gateway (weroam), best cost/performance'
-        : key === 'unode' ? 'Alternate multi-model gateway (unodetech)' : key,
+    Object.keys(DEFAULT_PROVIDERS).filter(isSupportedProviderId).sort((a, b) => providerRank(a) - providerRank(b)).map((key) => ({
+      label: key === 'unode' ? '🏠 Unode (Recommended)' : key === 'roam' ? 'Roam (partner gateway)' : key.charAt(0).toUpperCase() + key.slice(1),
+      description: key === 'unode' ? 'Unode multi-model gateway (unodetech), 50+ models'
+        : key === 'roam' ? 'Partner multi-model gateway (weroam)' : key,
       providerKey: key,
     })),
-    { placeHolder: 'Select LLM provider (Roam recommended)', title: 'UnodeAi — Choose Provider' }
+    { placeHolder: 'Select LLM provider (Unode recommended)', title: 'UnodeAi — Choose Provider' }
   );
-  const providerKey = (providerPick?.providerKey ?? 'roam') as keyof typeof DEFAULT_PROVIDERS;
+  const providerKey = (providerPick?.providerKey ?? 'unode') as keyof typeof DEFAULT_PROVIDERS;
 
   const template = ROLE_TEMPLATES[rolePick.roleKey];
 

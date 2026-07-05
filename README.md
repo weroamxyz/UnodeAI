@@ -24,7 +24,7 @@ Build a team of AI agents inside VS Code. Each agent runs in its own session wit
 ## Quick start
 
 1. Install **UnodeAi** from the Marketplace and reload VS Code. On first run, the **Setup Wizard** opens automatically — it walks you through the steps below.
-2. Set your key: **“UnodeAi: Set Provider API Key”** → select your provider and paste its API key. You can use OpenAI, Anthropic, OpenRouter, or any OpenAI-compatible endpoint. The default provider is the Roam (weroam) gateway at `https://ai.weroam.xyz/v1` (OpenAI-compatible, `Authorization: Bearer <key>`; browse its models & pricing at <https://ai.weroam.xyz/pricing?lang=en>).
+2. Set your key: **“UnodeAi: Set Provider API Key”** → select your provider and paste its API key. The default provider is the **Unode** gateway at `https://www.unodetech.xyz/v1` (OpenAI-compatible, `Authorization: Bearer <key>`, `UNODE_API_KEY`). You can also pick the **Roam** partner gateway, OpenAI, Anthropic, OpenRouter, or any OpenAI-compatible endpoint.
 3. Create a team: **“UnodeAi: Create Default Team”** spins up a PM + Architect + Developer + Reviewer crew.
 4. Put them to work: open the **Chat** panel (or **“UnodeAi: Run Demo Task”**), give the PM a goal, and watch the crew collaborate — streaming replies, tool cards, and the Activity Feed.
 
@@ -32,9 +32,9 @@ See **[USAGE.md](USAGE.md)** for the full guide.
 
 ## Providers & models
 
-- **Roam (default)** — the OpenAI-compatible **weroam** gateway (`https://ai.weroam.xyz/v1`); assign any of 50+ leading models per role. **Deeply discounted, price-competitive token pricing** — see live prices at **[ai.weroam.xyz/pricing](https://ai.weroam.xyz/pricing?lang=en)**.
-- **Unode Gateway** — an OpenAI-compatible LLM token gateway (`https://www.unodetech.xyz/v1`) built for enterprise scale and the largest corporate customers. The same 50+‑model, per‑role routing as Roam, with its own API key (`UNODE_API_KEY`).
-- **Any OpenAI-compatible endpoint** — set the base URL per agent.
+- **Unode Gateway (default)** — the OpenAI-compatible **Unode** gateway (`https://www.unodetech.xyz/v1`), built for enterprise scale and the largest corporate customers; assign any of 50+ leading models per role, with its own API key (`UNODE_API_KEY`).
+- **Roam (partner gateway)** — the OpenAI-compatible **weroam** gateway (`https://ai.weroam.xyz/v1`), a partner provider; same 50+‑model per‑role routing with `ROAM_API_KEY`. Live prices at **[ai.weroam.xyz/pricing](https://ai.weroam.xyz/pricing?lang=en)**.
+- **Any OpenAI-compatible endpoint** — OpenAI, Anthropic, OpenRouter, or your own base URL, set per agent.
 - **Claude (headless)** — uses the `claude` CLI’s own authentication (no key stored here).
 
 ## Configure without editing JSON
