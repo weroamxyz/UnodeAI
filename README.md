@@ -2,7 +2,7 @@
 
 Build a team of AI agents inside VS Code. Each agent runs in its own session with its own role, skill, and model — route heavy reasoning to top models and routine work to cheaper ones, and let agents hand off through a shared message bus. A **PM agent** orchestrates: it breaks down the goal, delegates to teammates, runs verification gates, and drives the fix loop.
 
-> 💸 **One crew, 50+ models, one bill.** The default **Roam gateway** serves **50+ leading models** (DeepSeek, Claude, GPT, Qwen and more) at **exclusive, deeply-discounted rates with a dependable SLA** — so running a whole multi-agent crew costs less than a single premium seat. Browse live models & pricing at **[ai.weroam.xyz/pricing](https://ai.weroam.xyz/pricing?lang=en)**.
+> 💸 **One crew, 50+ models, one bill.** The default **Unode gateway** serves **50+ leading models** (DeepSeek, Claude, GPT, Qwen and more) at **exclusive, deeply-discounted rates with a dependable SLA** — so running a whole multi-agent crew costs less than a single premium seat. Browse live models & pricing at **[unodetech.xyz](https://www.unodetech.xyz)**.
 
 > 📖 **New here?** Read the **[User Guide](USAGE.md)** (full walkthrough) or the **[Graphical Walkthrough](docs/GRAPHICAL_USER_GUIDE.md)** (screenshots).
 
@@ -12,7 +12,7 @@ Build a team of AI agents inside VS Code. Each agent runs in its own session wit
 - **Plan / Act mode** — a per-agent toggle. **Plan mode is enforced at the tool layer** (the agent gets read-only tools only; file writes, commands, delegation, and MCP tools are refused — not just discouraged by a prompt), so a planning turn is genuinely safe.
 - **PM orchestration** — a coordinator agent delegates tasks, runs build/type-check/test gates, and routes fixes back to the right teammate. Agents collaborate over an in-process message bus you can follow in the Activity Feed.
 - **Verified worktree fan-out — a crew only lands work that passes your checks.** Each agent works in its **own git worktree** (true isolation); on every turn UnodeAi runs your `verifyCommand` (build/lint/test) in that worktree and merges to a `unode/integration` branch **only if it passes** — failing work is held on its branch and handed back to fix. The review board shows per-lane ✓ verified / ✗ failing / ⚠ unverified, and **flags any lane that passed by editing the tests instead of fixing the code**. Land it all with one **Finalize**. Neither Cline nor Kilo gate the *team* merge on verification — this is the moat. (Opt-in: `unode.concurrencyStrategy: "worktree"`.)
-- **Multi-model team (cost arbitrage)** — assign a different provider and model per role: premium models for reasoning, cheaper Roam-hosted models for routine work. And because the **default Roam gateway is deeply discounted**, even premium models run at price-competitive rates. **Smart Mode** can auto-pick a tier (economy / standard / premium) per task.
+- **Multi-model team (cost arbitrage)** — assign a different provider and model per role: premium models for reasoning, cheaper gateway-hosted models for routine work. And because the **default Unode gateway is deeply discounted**, even premium models run at price-competitive rates. **Smart Mode** can auto-pick a tier (economy / standard / premium) per task.
 - **Reliable on cheap & open models** — the whole point of running DeepSeek / Kimi / Qwen instead of a premium seat is that they actually finish the job. UnodeAi makes them: it **recovers malformed or mis-formatted tool calls**, adapts the **tool-calling format per model**, retries empty/stuck turns, **escalates a refusing model to its fallback**, and injects your project's conventions — so weak models complete tasks instead of stalling.
 - **Visual workflow editor** — design multi-step pipelines with **conditional branches** (jump to a step when a result matches), drag-to-reorder, and built-in templates. Saved to `.unode/team.json`.
 - **MCP servers** — connect real tools (GitHub, Playwright, filesystem, …). Default-deny per agent, with approval before mounting; tools appear inline in chat as cards.
@@ -32,9 +32,8 @@ See **[USAGE.md](USAGE.md)** for the full guide.
 
 ## Providers & models
 
-- **Unode Gateway (default)** — the OpenAI-compatible **Unode** gateway (`https://www.unodetech.xyz/v1`), built for enterprise scale and the largest corporate customers; assign any of 50+ leading models per role, with its own API key (`UNODE_API_KEY`).
-- **Roam (partner gateway)** — the OpenAI-compatible **weroam** gateway (`https://ai.weroam.xyz/v1`), a partner provider; same 50+‑model per‑role routing with `ROAM_API_KEY`. Live prices at **[ai.weroam.xyz/pricing](https://ai.weroam.xyz/pricing?lang=en)**.
-- **Any OpenAI-compatible endpoint** — OpenAI, Anthropic, OpenRouter, or your own base URL, set per agent.
+- **Unode Gateway (default)** — the OpenAI-compatible **Unode** gateway (`https://www.unodetech.xyz/v1`), built for enterprise scale and the largest corporate customers; assign any of 50+ leading models per role, with its own API key (`UNODE_API_KEY`). Browse models & pricing at **[unodetech.xyz](https://www.unodetech.xyz)**.
+- **Any OpenAI-compatible endpoint** — OpenAI, Anthropic, OpenRouter, a partner gateway, or your own base URL, set per agent.
 - **Claude (headless)** — uses the `claude` CLI’s own authentication (no key stored here).
 
 ## Configure without editing JSON
@@ -86,7 +85,7 @@ what the extension does *not* contain: **[SECURITY.md](https://github.com/weroam
 - **[User Guide](USAGE.md)** — full walkthrough
 - **[Graphical Walkthrough](docs/GRAPHICAL_USER_GUIDE.md)** — screenshots
 - **[Changelog](CHANGELOG.md)**
-- **[Models & pricing](https://ai.weroam.xyz/pricing?lang=en)**
+- **[Models & pricing](https://www.unodetech.xyz)**
 
 ## License
 

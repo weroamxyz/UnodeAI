@@ -6,7 +6,7 @@ Product: Multi-model AI team extension for VS Code
 
 UnodeAi lets you run a team of AI agents inside VS Code. Each agent has its own role, model, tools, chat history, and safety policy. You can work with one agent directly, run a coordinated PM-led crew, or use deterministic workflows for repeatable processes.
 
-The default **Roam** provider uses the OpenAI-compatible Roam gateway (weroam) at `https://ai.weroam.xyz/v1`, with its own API key (`ROAM_API_KEY`). Live model and pricing information is at `https://ai.weroam.xyz/pricing?lang=en`.
+The default **Unode** provider uses the OpenAI-compatible Unode gateway at `https://www.unodetech.xyz/v1`, with its own API key (`UNODE_API_KEY`). Live model and pricing information is at `https://www.unodetech.xyz`. Other providers (OpenAI, Anthropic, OpenRouter, a partner gateway, or any OpenAI-compatible endpoint) are selectable per agent.
 
 ## 1. Install UnodeAi
 
@@ -62,17 +62,18 @@ Choose the secret name for your provider:
 
 | Provider | Secret name |
 |---|---|
-| Roam gateway (weroam, default) | `ROAM_API_KEY` |
+| Unode gateway (default) | `UNODE_API_KEY` |
 | OpenAI | `OPENAI_API_KEY` |
 | Anthropic / Claude | `ANTHROPIC_API_KEY` |
 | OpenRouter | `OPENROUTER_API_KEY` |
+| Roam partner gateway | `ROAM_API_KEY` |
 | Custom OpenAI-compatible gateway | `CUSTOM_API_KEY` |
 
 Secrets are stored in VS Code SecretStorage. They are not written to `.unode/team.json`, settings files, chat exports, or source control.
 
 **Zero data retention & no telemetry.** UnodeAi itself keeps no copy of your code or prompts and has no analytics, tracking, or phone-home of any kind. Chat history, team config, and keys all stay on your machine; your code is sent only to the model provider you configure (nothing else). Because UnodeAi works with any OpenAI-compatible endpoint, you can point it at a self-hosted / in-VPC model for provable, end-to-end zero-retention.
 
-**Don't have an account or credits yet?** The **Providers** tab of UnodeAi Settings has a sign-up / top-up button that opens registration in your browser — **Roam Gateway** ([ai.weroam.xyz](https://ai.weroam.xyz/login?lang=en)). Create an account, top up, then paste your key above.
+**Don't have an account or credits yet?** The **Providers** tab of UnodeAi Settings has a sign-up / top-up button that opens registration in your browser — **Unode Gateway** ([unodetech.xyz](https://www.unodetech.xyz)). Create an account, top up, then paste your key above.
 
 ## 3. Create a Team
 
@@ -114,7 +115,7 @@ The team picker also includes presets for business planning, business analysis, 
 Run `UnodeAi: Build an Agent` (or use the Team panel) to open the **Agent Builder** — a form where you create or edit a custom agent without touching JSON:
 
 - **Identity** — name, role (a built-in template or a custom one like *CEO*), and an icon (preset or any `$(codicon)`).
-- **Model** — pick from the **full live model list with prices** (on the Roam gateway these show your **discounted** rate); set a **backup model** and the **tool-calling method** (Native / XML).
+- **Model** — pick from the **full live model list with prices** (on the Unode gateway these show your **discounted** rate); set a **backup model** and the **tool-calling method** (Native / XML).
 - **Model fine-tuning** — per-agent sampling/reasoning settings (temperature, top-P, max output tokens, reasoning effort, presence/frequency penalty). Leave a field blank to use the global default. These are the same values the Settings panel shows for this agent, so the two stay in sync.
 - **Smart Mode tier** — a per-agent tier override (Premium / Standard / Economy, or "Use role default"). When Smart Mode is on, this agent runs on the model mapped to its tier — so two same-role agents can run at different tiers. The tier→model mapping itself is global (Settings → Smart Mode).
 - **Instructions** — write the agent's system prompt.
@@ -308,7 +309,8 @@ Important provider settings:
 | Setting | Default | Purpose |
 |---|---|---|
 | `unode.defaultProvider` | `roam` | Provider used for new agents |
-| `unode.baseUrl` | `https://ai.weroam.xyz/v1` | Roam OpenAI-compatible gateway URL |
+| `unode.unodeBaseUrl` | `https://www.unodetech.xyz/v1` | Unode gateway URL (default provider) |
+| `unode.baseUrl` | `https://ai.weroam.xyz/v1` | Roam partner gateway URL |
 | `unode.modelCatalogUrl` | empty | Optional hosted model catalog |
 | `unode.modelPrices` | `{}` | Manual price overrides |
 | `unode.pricingSources` | `[]` | Extra pricing sources |

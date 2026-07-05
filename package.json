@@ -736,7 +736,7 @@
         "unode.baseUrl": {
           "type": "string",
           "default": "https://ai.weroam.xyz/v1",
-          "description": "Base URL for the default Roam OpenAI-compatible gateway (weroam; used by agents on the 'roam' provider). Auth is 'Authorization: Bearer <key>'; expects OpenAI-compatible /chat/completions and /models. Browse available models & pricing at https://ai.weroam.xyz/pricing?lang=en"
+          "description": "Base URL for the Roam partner OpenAI-compatible gateway (weroam; used by agents on the 'roam' provider). Auth is 'Authorization: Bearer <key>'; expects OpenAI-compatible /chat/completions and /models. The default provider is Unode (see unode.unodeBaseUrl)."
         },
         "unode.unodeBaseUrl": {
           "type": "string",
@@ -898,7 +898,7 @@
         "unode.engine.workspaceContext": {
           "type": "boolean",
           "default": false,
-          "description": "Opt-in: when enabled, Roam gathers a small workspace context at turn start (active editor snippet + workspace Error/Warning diagnostics) and passes it to the backend on TurnAttachments.workspaceContext. Disabled by default for privacy/perf."
+          "description": "Opt-in: when enabled, UnodeAi gathers a small workspace context at turn start (active editor snippet + workspace Error/Warning diagnostics) and passes it to the backend on TurnAttachments.workspaceContext. Disabled by default for privacy/perf."
         },
         "unode.marketplace.fetchCatalog": {
           "type": "boolean",
