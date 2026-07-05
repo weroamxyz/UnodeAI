@@ -6,7 +6,7 @@ Product: Multi-model AI team extension for VS Code
 
 UnodeAi lets you run a team of AI agents inside VS Code. Each agent has its own role, model, tools, chat history, and safety policy. You can work with one agent directly, run a coordinated PM-led crew, or use deterministic workflows for repeatable processes.
 
-The default **Unode** provider uses the OpenAI-compatible Unode gateway at `https://www.unodetech.xyz/v1`, with its own API key (`UNODE_API_KEY`). Live model and pricing information is at `https://www.unodetech.xyz`. Other providers (OpenAI, Anthropic, OpenRouter, a partner gateway, or any OpenAI-compatible endpoint) are selectable per agent.
+The default **Unode** provider uses the OpenAI-compatible Unode gateway at `https://www.unodetech.xyz/v1`, with its own API key (`UNODE_API_KEY`). Live model and pricing information is at `https://www.unodetech.xyz/pricing?lang=en`. Other providers (OpenAI, Anthropic, OpenRouter, a partner gateway, or any OpenAI-compatible endpoint) are selectable per agent.
 
 ## 1. Install UnodeAi
 

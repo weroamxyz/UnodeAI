@@ -111,7 +111,7 @@ async function pickModel(
 
   return new Promise<string | undefined>((resolve) => {
     const qp = vscode.window.createQuickPick();
-    qp.title = 'UnodeAi — Model  ·  browse models & pricing: https://ai.weroam.xyz/pricing?lang=en';
+    qp.title = 'UnodeAi — Model  ·  browse models & pricing: https://www.unodetech.xyz/pricing?lang=en';
     qp.placeholder = 'Pick a model or type a custom model id (e.g. deepseek-v4-flash, gpt-4o)';
     qp.ignoreFocusOut = true;
     qp.matchOnDescription = true;

@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { DemoTask } from '../state/DemoTasks';
 import { csp, nonce, sanitizeHref } from './webviewSecurity';
 
-const PRICING_URL = 'https://ai.weroam.xyz/pricing?lang=en';
+const PRICING_URL = 'https://www.unodetech.xyz/pricing?lang=en';
 
 export interface OnboardingDeps {
   getBaseUrl: () => string;
